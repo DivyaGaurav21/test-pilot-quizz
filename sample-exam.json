@@ -1,0 +1,20 @@
+{
+  "exam": "SSC CGL",
+  "subject": "Quantitative Aptitude",
+  "topic": "Percentage",
+  "difficulty": "Easy",
+  "time": 30,
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is 25% of 240?",
+      "options": [
+        "40",
+        "50",
+        "60",
+        "80"
+      ],
+      "correctAnswer": 2
+    }
+  ]
+}
