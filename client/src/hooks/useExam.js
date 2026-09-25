@@ -13,7 +13,7 @@ const useExam = () => {
       setError("");
 
       const response = await examService.getExams();
-      setExams(response.exams || response.data || []);
+      setExams(response);
       return response;
     } catch (err) {
       const message =
