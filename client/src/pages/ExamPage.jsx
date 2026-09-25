@@ -1,65 +1,193 @@
-import { useParams } from 'react-router-dom';
-import { useExam } from '../hooks/useExam';
-import QuestionCard from '../components/exam/QuestionCard';
-import QuestionNavigation from '../components/exam/QuestionNavigation';
-import ExamTimer from '../components/exam/ExamTimer';
-import Loading from '../components/common/Loading';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import QuestionCard from "../components/exam/QuestionCard";
+import QuestionNavigation from "../components/exam/QuestionNavigation";
+import ExamTimer from "../components/exam/ExamTimer";
+import Loading from "../components/common/Loading";
+import ErrorMessage from "../components/common/ErrorMessage";
+import useExam from "../hooks/useExam";
 
-export default function ExamPage() {
+const ExamPage = () => {
   const { id } = useParams();
-  const {
-    exam, loading, current, answers, setAnswer, setCurrent, submitExam,
-  } = useExam(id);
+  const navigate = useNavigate();
+  const { exam, loading, error, fetchExam, submitExam } = useExam();
 
-  if (loading) return <Loading />;
-  if (!exam) return <p>Exam not found.</p>;
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [markedForReview, setMarkedForReview] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [examStartedAt] = useState(() => Date.now());
 
-  const question = exam.questions?.[current];
+  useEffect(() => {
+    fetchExam(id);
+  }, [fetchExam, id]);
+
+  const questions = useMemo(() => exam?.questions || [], [exam]);
+  const currentQuestion = questions[currentIndex];
+
+  const handleAnswerChange = (questionId, answer) => {
+    setAnswers((current) => ({
+      ...current,
+      [questionId]: answer,
+    }));
+  };
+
+  const toggleReview = () => {
+    if (!currentQuestion) return;
+
+    setMarkedForReview((current) =>
+      current.includes(currentQuestion._id)
+        ? current.filter((questionId) => questionId !== currentQuestion._id)
+        : [...current, currentQuestion._id]
+    );
+  };
+
+  const handleSubmit = useCallback(async () => {
+    if (submitting) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to submit the exam?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setSubmitting(true);
+
+      const timeTaken = Math.floor((Date.now() - examStartedAt) / 1000);
+      const response = await submitExam(id, answers, timeTaken);
+
+      const resultId =
+        response?.result?._id || response?.data?._id || response?._id;
+
+      if (resultId) {
+        navigate(`/results/${resultId}`);
+      } else {
+        navigate("/results");
+      }
+    } catch {
+      // Error is handled by useExam.
+    } finally {
+      setSubmitting(false);
+    }
+  }, [answers, examStartedAt, id, navigate, submitExam, submitting]);
+
+  if (loading && !exam) {
+    return <Loading message="Loading exam..." />;
+  }
+
+  if (!exam && error) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-4 py-8">
+        <div className="mx-auto max-w-3xl">
+          <ErrorMessage message={error} onRetry={() => fetchExam(id)} />
+        </div>
+      </main>
+    );
+  }
+
+  if (!exam) return null;
+
+  if (questions.length === 0) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-4 py-8">
+        <div className="mx-auto max-w-3xl">
+          <ErrorMessage message="No questions are available for this exam." />
+        </div>
+      </main>
+    );
+  }
+
+  const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">{exam.name}</h1>
-        <ExamTimer durationMinutes={exam.durationMinutes || 30} onExpire={submitExam} />
-      </div>
+    <main className="min-h-screen bg-gray-50 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{exam.title}</h1>
+            <p className="text-sm text-gray-500">
+              {currentIndex + 1} of {questions.length}
+            </p>
+          </div>
 
-      <QuestionNavigation
-        total={exam.questions?.length || 0}
-        current={current}
-        answers={answers}
-        onChange={setCurrent}
-      />
+          <ExamTimer
+            durationMinutes={exam.duration}
+            onTimeUp={handleSubmit}
+          />
+        </div>
 
-      {question && (
-        <QuestionCard
-          question={question}
-          selectedOption={answers[current]}
-          onSelect={(value) => setAnswer(current, value)}
-        />
-      )}
-
-      <div className="flex justify-between">
-        <button
-          disabled={current === 0}
-          onClick={() => setCurrent((value) => Math.max(0, value - 1))}
-          className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
-        >
-          Previous
-        </button>
-
-        {current < exam.questions.length - 1 ? (
-          <button
-            onClick={() => setCurrent((value) => Math.min(exam.questions.length - 1, value + 1))}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-white"
-          >
-            Next
-          </button>
-        ) : (
-          <button onClick={submitExam} className="rounded-lg bg-green-600 px-4 py-2 text-white">
-            Submit Exam
-          </button>
+        {error && (
+          <div className="mb-5">
+            <ErrorMessage message={error} />
+          </div>
         )}
+
+        <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+          <section>
+            <QuestionCard
+              question={currentQuestion}
+              questionNumber={currentIndex + 1}
+              selectedAnswer={answers[currentQuestion._id]}
+              onAnswerChange={handleAnswerChange}
+            />
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={toggleReview}
+                className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2.5 text-sm font-semibold text-yellow-700 hover:bg-yellow-100"
+              >
+                {markedForReview.includes(currentQuestion._id)
+                  ? "Remove Review Mark"
+                  : "Mark for Review"}
+              </button>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={currentIndex === 0}
+                  onClick={() => setCurrentIndex((index) => index - 1)}
+                  className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {!isLastQuestion ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentIndex((index) => index + 1)}
+                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting ? "Submitting..." : "Submit Exam"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <aside>
+            <QuestionNavigation
+              questions={questions}
+              currentIndex={currentIndex}
+              answers={answers}
+              markedForReview={markedForReview}
+              onSelect={setCurrentIndex}
+            />
+          </aside>
+        </div>
       </div>
-    </section>
+    </main>
   );
-}
+};
+
+export default ExamPage;

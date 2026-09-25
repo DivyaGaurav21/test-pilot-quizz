@@ -1,29 +1,89 @@
-import { useEffect, useState } from 'react';
-import { getExam, submitResult } from '../services/examService';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useState } from "react";
+import examService from "../services/examService";
 
-export function useExam(id) {
-  const navigate = useNavigate();
+const useExam = () => {
+  const [exams, setExams] = useState([]);
   const [exam, setExam] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    getExam(id)
-      .then(setExam)
-      .finally(() => setLoading(false));
-  }, [id]);
+  const fetchExams = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const setAnswer = (questionIndex, optionIndex) => {
-    setAnswers((prev) => ({ ...prev, [questionIndex]: optionIndex }));
+      const response = await examService.getExams();
+      setExams(response.exams || response.data || []);
+      return response;
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Unable to load exams.";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchExam = useCallback(async (examId) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await examService.getExamById(examId);
+      const examData = response.exam || response.data || response;
+      setExam(examData);
+      return examData;
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to load exam."
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const startExam = useCallback(async (examId) => {
+    try {
+      setLoading(true);
+      setError("");
+      return await examService.startExam(examId);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to start exam."
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const submitExam = useCallback(async (examId, answers, timeTaken) => {
+    try {
+      setLoading(true);
+      setError("");
+      return await examService.submitExam(examId, answers, timeTaken);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to submit exam."
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    exams,
+    exam,
+    loading,
+    error,
+    fetchExams,
+    fetchExam,
+    startExam,
+    submitExam,
   };
+};
 
-  const submitExam = async () => {
-    if (!exam) return;
-    const result = await submitResult(id, answers);
-    navigate(`/results/${result._id}`);
-  };
-
-  return { exam, loading, current, answers, setAnswer, setCurrent, submitExam };
-}
+export default useExam;

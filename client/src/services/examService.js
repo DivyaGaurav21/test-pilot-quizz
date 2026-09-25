@@ -1,16 +1,33 @@
-import api from './api';
+import api from "./api";
 
-export const getExams = async () => {
-  const { data } = await api.get('/exams');
-  return data;
+const getExams = async () => {
+  const response = await api.get("/exams");
+  return response.data;
 };
 
-export const getExam = async (id) => {
-  const { data } = await api.get(`/exams/${id}`);
-  return data;
+const getExamById = async (examId) => {
+  const response = await api.get(`/exams/${examId}`);
+  return response.data;
 };
 
-export const submitResult = async (examId, answers) => {
-  const { data } = await api.post('/results', { examId, answers });
-  return data;
+const startExam = async (examId) => {
+  const response = await api.post(`/exams/${examId}/start`);
+  return response.data;
 };
+
+const submitExam = async (examId, answers, timeTaken) => {
+  const response = await api.post(`/exams/${examId}/submit`, {
+    answers,
+    timeTaken,
+  });
+  return response.data;
+};
+
+const examService = {
+  getExams,
+  getExamById,
+  startExam,
+  submitExam,
+};
+
+export default examService;

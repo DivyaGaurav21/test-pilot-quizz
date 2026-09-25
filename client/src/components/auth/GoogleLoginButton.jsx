@@ -7,15 +7,6 @@ const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 // Google ko sirf ek baar initialize karne ke liye
 let googleInitialized = false;
 
-console.log(
-  'Google Client ID:',
-  import.meta.env.VITE_GOOGLE_CLIENT_ID
-);
-
-console.log(
-  'Current Origin:',
-  window.location.origin
-);
 
 const loadGoogleScript = () => {
   return new Promise((resolve, reject) => {

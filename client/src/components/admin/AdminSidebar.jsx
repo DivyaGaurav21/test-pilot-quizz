@@ -1,13 +1,27 @@
-import { Link } from 'react-router-dom';
+import React from "react";
+import { NavLink } from "react-router-dom";
 
-export default function AdminSidebar() {
+const AdminSidebar = () => {
+  const linkClass = ({ isActive }) =>
+    `block rounded-lg px-3 py-2.5 text-sm font-medium ${
+      isActive
+        ? "bg-blue-50 text-blue-700"
+        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+    }`;
+
   return (
-    <aside className="rounded-xl border bg-white p-4">
-      <h2 className="font-bold">Admin Panel</h2>
-      <nav className="mt-4 flex flex-col gap-2 text-sm">
-        <Link to="/admin" className="rounded px-3 py-2 hover:bg-slate-100">Dashboard</Link>
-        <Link to="/admin/import" className="rounded px-3 py-2 hover:bg-slate-100">Import Questions</Link>
+    <aside className="w-full rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:w-64">
+      <nav className="space-y-1">
+        <NavLink to="/admin" end className={linkClass}>
+          Dashboard
+        </NavLink>
+
+        <NavLink to="/admin/import" className={linkClass}>
+          Import Exam
+        </NavLink>
       </nav>
     </aside>
   );
-}
+};
+
+export default AdminSidebar;

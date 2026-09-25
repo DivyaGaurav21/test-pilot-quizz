@@ -1,6 +1,18 @@
-import api from './api';
+import api from "./api";
 
-export const importExam = async (examData) => {
-  const { data } = await api.post('/admin/exams/import', examData);
-  return data;
+const importExamJson = async (examData) => {
+  const response = await api.post("/admin/import-json", examData);
+  return response.data;
 };
+
+const getAdminResults = async () => {
+  const response = await api.get("/admin/results");
+  return response.data;
+};
+
+const adminService = {
+  importExamJson,
+  getAdminResults,
+};
+
+export default adminService;
