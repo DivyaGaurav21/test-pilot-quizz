@@ -14,7 +14,6 @@ const ExamPage = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [markedForReview, setMarkedForReview] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [examStartedAt] = useState(() => Date.now());
 
@@ -123,18 +122,8 @@ const ExamPage = () => {
               onAnswerChange={handleAnswerChange}
             />
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button
-                type="button"
-                onClick={toggleReview}
-                className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2.5 text-sm font-semibold text-yellow-700 hover:bg-yellow-100"
-              >
-                {markedForReview.includes(currentQuestion._id)
-                  ? "Remove Review Mark"
-                  : "Mark for Review"}
-              </button>
-
-              <div className="flex gap-3">
+              
+              <div className="flex gap-3 mt-5 flex-col md:flex-row">
                 <button
                   type="button"
                   disabled={currentIndex === 0}
@@ -163,7 +152,6 @@ const ExamPage = () => {
                   </button>
                 )}
               </div>
-            </div>
           </section>
 
           <aside>
@@ -171,7 +159,6 @@ const ExamPage = () => {
               questions={questions}
               currentIndex={currentIndex}
               answers={answers}
-              markedForReview={markedForReview}
               onSelect={setCurrentIndex}
             />
           </aside>
