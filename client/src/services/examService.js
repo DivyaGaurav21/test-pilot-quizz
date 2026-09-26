@@ -12,7 +12,6 @@ const getExamById = async (examId) => {
 
 const startExam = async (examId) => {
   const response = await api.post(`/exams/${examId}/start`);
-  console.log(response, "sdfghjhgfdasgfdgh")
   return response.data;
 };
 
