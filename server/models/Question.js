@@ -1,18 +1,3 @@
-// import mongoose from 'mongoose';
-
-// const questionSchema = new mongoose.Schema(
-//   {
-//     exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-//     externalId: Number,
-//     question: { type: String, required: true },
-//     options: [{ type: String, required: true }],
-//     correctAnswer: { type: Number, required: true },
-//     explanation: String,
-//   },
-//   { timestamps: true }
-// );
-
-// export default mongoose.model('Question', questionSchema);
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({

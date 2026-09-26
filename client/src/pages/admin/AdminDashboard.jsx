@@ -15,7 +15,7 @@ const AdminDashboard = () => {
       setError("");
 
       const data = await adminService.getAdminResults();
-      setResults(data.results || data.data || []);
+      setResults(data || []);
     } catch (err) {
       setError(
         err.response?.data?.message || "Unable to load admin dashboard."
