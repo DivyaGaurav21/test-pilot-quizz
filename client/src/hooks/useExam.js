@@ -13,7 +13,7 @@ const useExam = () => {
       setError("");
 
       const response = await examService.getExams();
-      setExams(response.exams || response.data || []);
+      setExams(response);
       return response;
     } catch (err) {
       const message =
@@ -31,9 +31,8 @@ const useExam = () => {
       setError("");
 
       const response = await examService.getExamById(examId);
-      const examData = response.exam || response.data || response;
-      setExam(examData);
-      return examData;
+      setExam(response);
+      return response;
     } catch (err) {
       setError(
         err.response?.data?.message || "Unable to load exam."

@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import QuestionCard from "../components/exam/QuestionCard";
 import QuestionNavigation from "../components/exam/QuestionNavigation";
 import ExamTimer from "../components/exam/ExamTimer";
 import Loading from "../components/common/Loading";
 import ErrorMessage from "../components/common/ErrorMessage";
-import useExam from "../hooks/useExam";
+import { useExamContext } from "../context/ExamContext.jsx";
 
 const ExamPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { exam, loading, error, fetchExam, submitExam } = useExam();
+  const { exam, questions, loading, error, submitExam } = useExamContext();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -18,11 +18,6 @@ const ExamPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [examStartedAt] = useState(() => Date.now());
 
-  useEffect(() => {
-    fetchExam(id);
-  }, [fetchExam, id]);
-
-  const questions = useMemo(() => exam?.questions || [], [exam]);
   const currentQuestion = questions[currentIndex];
 
   const handleAnswerChange = (questionId, answer) => {
@@ -66,7 +61,7 @@ const ExamPage = () => {
         navigate("/results");
       }
     } catch {
-      // Error is handled by useExam.
+      // Error is handled by context.
     } finally {
       setSubmitting(false);
     }
@@ -76,23 +71,19 @@ const ExamPage = () => {
     return <Loading message="Loading exam..." />;
   }
 
-  if (!exam && error) {
+  // Direct visit / page refresh guard — context is empty
+  if (!exam || questions.length === 0) {
     return (
       <main className="min-h-screen bg-gray-50 px-4 py-8">
         <div className="mx-auto max-w-3xl">
-          <ErrorMessage message={error} onRetry={() => fetchExam(id)} />
-        </div>
-      </main>
-    );
-  }
-
-  if (!exam) return null;
-
-  if (questions.length === 0) {
-    return (
-      <main className="min-h-screen bg-gray-50 px-4 py-8">
-        <div className="mx-auto max-w-3xl">
-          <ErrorMessage message="No questions are available for this exam." />
+          <ErrorMessage message="No active exam session found. Please start the exam again." />
+          <button
+            type="button"
+            onClick={() => navigate(`/exams/${id}/instructions`)}
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Go to Instructions
+          </button>
         </div>
       </main>
     );

@@ -38,7 +38,7 @@ const ExamCard = ({ exam }) => {
       </div>
 
       <Link
-        to={`/exams/${exam._id}`}
+        to={`/exams/${exam._id}/instructions`}
         className="mt-5 inline-flex justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
       >
         View Exam
