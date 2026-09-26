@@ -73,6 +73,22 @@ const useExam = () => {
     }
   }, []);
 
+  const deleteExam = useCallback(async (examId) => {
+  try {
+    setLoading(true);
+    setError("");
+    const response = await examService.deleteExam(examId);
+    setExams((current) => current.filter((exam) => exam._id !== examId));
+    return response;
+  } catch (err) {
+    setError(err.response?.data?.message || "Unable to delete exam.");
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+
   return {
     exams,
     exam,
@@ -82,6 +98,7 @@ const useExam = () => {
     fetchExam,
     startExam,
     submitExam,
+    deleteExam
   };
 };
 

@@ -23,11 +23,17 @@ const submitExam = async (examId, answers, timeTaken) => {
   return response.data;
 };
 
+const deleteExam = async (examId) => {
+  const response = await api.delete(`/admin/exams/${examId}`);
+  return response.data;
+};
+
 const examService = {
   getExams,
   getExamById,
   startExam,
   submitExam,
+  deleteExam
 };
 
 export default examService;
