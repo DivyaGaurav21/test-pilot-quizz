@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const examRoutes = require('./routes/examRoutes');
-// const resultRoutes = require('./routes/resultRoutes');
+const resultRoutes = require('./routes/resultRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 // const { errorHandler } = require('./middleware/errorHandler');
@@ -22,10 +22,9 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
-// app.use('/api/results', resultRoutes);
+app.use('/api/results', resultRoutes);
 app.use('/api/admin', adminRoutes);
 
 // app.use(errorHandler);
 
-// export default app;
 module.exports = app;

@@ -26,15 +26,6 @@ const generateResultPdf = (result, user, res) => {
     .moveDown();
 
   const exam = result.examId || {};
-  doc
-    .fontSize(14)
-    .text('Exam Details', { underline: true })
-    .fontSize(12)
-    .text(`Title: ${exam.title || 'N/A'}`)
-    .text(`Subject: ${exam.subject || 'N/A'}`)
-    .text(`Topic: ${exam.topic || 'N/A'}`)
-    .text(`Difficulty: ${exam.difficulty || 'N/A'}`)
-    .moveDown();
 
   doc
     .fontSize(14)
