@@ -16,12 +16,12 @@ const Home = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2000&auto=format&fit=crop')",
+              "url('https://res.cloudinary.com/dq0jrieog/image/upload/fl_preserve_transparency/v1790462099/m0le65r9gqmrafolufbt.jpg?_s=public-apps')",
           }}
         />
 
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-900/85 to-indigo-900/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/75 via-slate-900/65 to-indigo-900/70" />
         {/* Decorative blur blobs */}
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />

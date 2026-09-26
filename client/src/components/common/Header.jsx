@@ -30,6 +30,9 @@ export default function Header() {
         >
           <Logo />
         </Link>
+        <div className="inline absolute right-20 md:hidden">
+           <LanguageSwitcher />
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-7 md:flex">
