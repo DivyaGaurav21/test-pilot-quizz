@@ -1,15 +1,18 @@
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import LanguageSwitcher from './LanguageSwitcher';
+import { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
+import LanguageSwitcher from "./LanguageSwitcher";
+import Logo from "./Logo";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   const navLinkClass = ({ isActive }) =>
-    `text-sm font-medium transition-colors ${
-      isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'
+    `text-sm font-extrabold transition-colors ${
+      isActive ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600"
     }`;
 
   const handleLogout = () => {
@@ -22,41 +25,41 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link
           to="/"
-          className="text-xl font-bold tracking-tight text-indigo-600"
+          className="tracking-tight text-indigo-600"
           onClick={() => setMenuOpen(false)}
         >
-          TestForge
+          <Logo />
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-7 md:flex">
-          <LanguageSwitcher/>
+          <LanguageSwitcher />
           <NavLink to="/exams" className={navLinkClass}>
-            Exams
+            {t("nav.exams")}
           </NavLink>
 
           {user && (
             <NavLink to="/profile" className={navLinkClass}>
-              Profile
+              {t("nav.profile")}
             </NavLink>
           )}
 
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <NavLink to="/admin" className={navLinkClass}>
-              Admin
+              {t("nav.admin")}
             </NavLink>
           )}
 
           {user ? (
             <div className="flex items-center gap-3 border-l border-slate-200 pl-5">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
-                {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                {user.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
               <button
                 onClick={logout}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
               >
-                Logout
+                {t("nav.logout")}
               </button>
             </div>
           ) : (
@@ -64,7 +67,7 @@ export default function Header() {
               to="/login"
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
             >
-              Login
+              {t("nav.login")}
             </Link>
           )}
         </nav>
@@ -77,12 +80,32 @@ export default function Header() {
           aria-label="Toggle menu"
         >
           {menuOpen ? (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           ) : (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           )}
         </button>
@@ -97,7 +120,9 @@ export default function Header() {
               onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
                 `rounded-lg px-3 py-2.5 text-sm font-medium ${
-                  isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-50'
+                  isActive
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-700 hover:bg-slate-50"
                 }`
               }
             >
@@ -110,7 +135,9 @@ export default function Header() {
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-2.5 text-sm font-medium ${
-                    isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-50'
+                    isActive
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-slate-700 hover:bg-slate-50"
                   }`
                 }
               >
@@ -118,13 +145,15 @@ export default function Header() {
               </NavLink>
             )}
 
-            {user?.role === 'admin' && (
+            {user?.role === "admin" && (
               <NavLink
                 to="/admin"
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-2.5 text-sm font-medium ${
-                    isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-50'
+                    isActive
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-slate-700 hover:bg-slate-50"
                   }`
                 }
               >

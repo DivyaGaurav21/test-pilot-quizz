@@ -1,9 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { useLanguage } from "../context/LanguageContext";
 
 const Home = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <main className="bg-gray-50">
@@ -20,7 +22,6 @@ const Home = () => {
 
         {/* Gradient overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-900/85 to-indigo-900/80" />
-
         {/* Decorative blur blobs */}
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
@@ -30,17 +31,15 @@ const Home = () => {
             <div className="max-w-3xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-               प्रतियोगी परीक्षा की तैयारी
+                {t("home.badge")}
               </span>
 
               <h1 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-               स्मार्ट तरीके से अभ्यास करें।
-                <br />
-               आत्मविश्वास के साथ तैयारी करें।
+               {t("home.title")}
               </h1>
 
               <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-               संरचित ऑनलाइन टेस्ट दें, अपनी प्रगति पर नज़र रखें और BPSC TRE जैसी प्रतियोगी परीक्षाओं की तैयारी को बेहतर बनाएं।.
+               {t("home.subtitle")}
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -48,7 +47,7 @@ const Home = () => {
                   to="/exams"
                   className="inline-flex justify-center rounded-lg bg-blue-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 hover:shadow-blue-500/40"
                 >
-                  Explore Exams
+                  {t("home.exploreExams")}
                 </Link>
 
                 {!user && (
@@ -56,7 +55,7 @@ const Home = () => {
                     to="/register"
                     className="inline-flex justify-center rounded-lg border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
                   >
-                    Create Account
+                    {t("home.createAccount")}
                   </Link>
                 )}
               </div>
@@ -75,9 +74,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="mt-4 font-semibold text-gray-900">Timed Tests</h2>
+              <h2 className="mt-4 font-semibold text-gray-900">{t("home.timedTests")}</h2>
               <p className="mt-2 text-sm leading-6 text-gray-600">
-                Practice under exam-style time limits.
+               {t("home.timedTestsDesc")}
               </p>
             </div>
 
@@ -87,9 +86,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="mt-4 font-semibold text-gray-900">Instant Results</h2>
+              <h2 className="mt-4 font-semibold text-gray-900">{t("home.instantResults")}</h2>
               <p className="mt-2 text-sm leading-6 text-gray-600">
-                See your score, correct, wrong and unanswered questions.
+                {t("home.instantResultsDesc")}
               </p>
             </div>
 
@@ -99,9 +98,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h2 className="mt-4 font-semibold text-gray-900">Track Progress</h2>
+              <h2 className="mt-4 font-semibold text-gray-900">{t("home.trackProgress")}</h2>
               <p className="mt-2 text-sm leading-6 text-gray-600">
-                Review your previous test results and keep improving.
+                {t("home.trackProgressDesc")}
               </p>
             </div>
           </div>

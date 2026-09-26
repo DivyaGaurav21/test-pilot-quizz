@@ -10,7 +10,7 @@ const en = {
     badge: "Competitive Exam Preparation",
     title: "Practice smarter. Prepare with confidence.",
     subtitle:
-      "Take structured online tests, track your performance and improve your preparation for competitive exams such as SSC CGL.",
+      "Take structured online tests, track your performance and improve your preparation for competitive exams such as BPSC Teachers.",
     exploreExams: "Explore Exams",
     createAccount: "Create Account",
     timedTests: "Timed Tests",
