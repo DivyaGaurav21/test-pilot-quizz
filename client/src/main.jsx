@@ -5,14 +5,17 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import "./index.css";
 import { ExamProvider } from "./context/ExamContext.jsx";
+import { LanguageProvider } from "./context/LanguageContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
+         <LanguageProvider>
         <ExamProvider>
           <App />
         </ExamProvider>
+        </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,

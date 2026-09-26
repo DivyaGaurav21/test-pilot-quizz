@@ -9,3 +9,4 @@ router.get('/:id', protect, getResultById);
 router.get('/:id/pdf', protect, downloadResultPdf);
 
 module.exports = router;
+  
