@@ -1,8 +1,8 @@
 
 const mongoose = require('mongoose');
 const Result = require('../models/Result');
-const User = require('../models/User');
 const { generateResultPdf } = require('../services/pdfService');
+const { sendError } = require('../utils/httpError');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -15,7 +15,7 @@ const getResults = async (req, res) => {
 
     return res.status(200).json(results);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch results', error: error.message });
+    return sendError(res, 500, 'Failed to fetch results', error);
   }
 };
 
@@ -39,7 +39,7 @@ const getResultById = async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch result', error: error.message });
+    return sendError(res, 500, 'Failed to fetch result', error);
   }
 };
 
@@ -65,7 +65,7 @@ const downloadResultPdf = async (req, res) => {
   } catch (error) {
     // Agar PDF stream shuru ho chuki hai, headers already sent ho sakte hain
     if (!res.headersSent) {
-      return res.status(500).json({ message: 'Failed to generate PDF', error: error.message });
+      return sendError(res, 500, 'Failed to generate PDF', error);
     }
     console.error('PDF generation error after headers sent:', error);
   }

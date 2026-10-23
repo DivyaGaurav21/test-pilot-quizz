@@ -1,8 +1,8 @@
 const { validateExamJson, importExam } = require('../services/examImportService');
 const mongoose = require('mongoose');
 const Exam = require('../models/Exam');
-const Question = require('../models/Question')
-const Result = require('../models/Result');
+const Question = require('../models/Question');
+const { sendError } = require('../utils/httpError');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -29,7 +29,7 @@ const importJson = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to import exam', error: error.message });
+    return sendError(res, 500, 'Failed to import exam', error);
   }
 };
 
@@ -43,7 +43,7 @@ const getAllResults = async (req, res) => {
 
     return res.status(200).json(results);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch results', error: error.message });
+    return sendError(res, 500, 'Failed to fetch results', error);
   }
 };
 
@@ -117,7 +117,7 @@ const deleteExam = async (req, res) => {
       deletedQuestionsCount: deletedQuestions.deletedCount,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to delete exam', error: error.message });
+    return sendError(res, 500, 'Failed to delete exam', error);
   }
 };
 

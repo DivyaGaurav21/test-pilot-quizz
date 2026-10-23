@@ -51,6 +51,21 @@ const examSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  ownershipType: {
+    type: String,
+    enum: ['platform', 'institute'],
+    default: 'platform',
+  },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null,
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'unpublished', 'archived'],
+    default: 'published',
+  },
 }, {
   timestamps: { createdAt: true, updatedAt: false },
 });

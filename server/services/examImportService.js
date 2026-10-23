@@ -81,6 +81,8 @@ const importExam = async (data) => {
           duration: data.duration,
           totalQuestions: data.questions.length,
           isPublished: true,
+          ownershipType: 'platform',
+          status: 'published',
         },
       ],
       { session }

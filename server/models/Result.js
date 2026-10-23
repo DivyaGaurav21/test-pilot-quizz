@@ -55,8 +55,22 @@ const resultSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  claimedTimeTaken: {
+    type: Number,
+  },
+  attemptId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Attempt',
+  },
+  answers: {
+    type: Map,
+    of: String,
+    default: {},
+  },
 }, {
   timestamps: { createdAt: 'submittedAt', updatedAt: false },
 });
+
+resultSchema.index({ attemptId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Result', resultSchema);

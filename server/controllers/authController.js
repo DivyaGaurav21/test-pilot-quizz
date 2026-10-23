@@ -1,96 +1,23 @@
-// import bcrypt from 'bcryptjs';
-// import { OAuth2Client } from 'google-auth-library';
-// import User from '../models/User.js';
-// import { generateToken } from '../utils/generateToken.js';
-
-// const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// export async function register(req, res, next) {
-//   try {
-//     const { name, email, password } = req.body;
-
-//     const existing = await User.findOne({ email });
-//     if (existing) return res.status(409).json({ message: 'Email already registered' });
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const user = await User.create({ name, email, password: hashedPassword });
-
-//     res.status(201).json({
-//       message: 'Registration successful',
-//       user: { id: user._id, name: user.name, email: user.email, role: user.role },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
-// export async function login(req, res, next) {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await User.findOne({ email });
-
-//     if (!user?.password || !(await bcrypt.compare(password, user.password))) {
-//       return res.status(401).json({ message: 'Invalid email or password' });
-//     }
-
-//     res.json({
-//       token: generateToken(user._id),
-//       user: { id: user._id, name: user.name, email: user.email, role: user.role },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
-// export async function googleLogin(req, res, next) {
-//   try {
-//     const { credential } = req.body;
-//     const ticket = await googleClient.verifyIdToken({
-//       idToken: credential,
-//       audience: process.env.GOOGLE_CLIENT_ID,
-//     });
-
-//     const payload = ticket.getPayload();
-//     const email = payload.email;
-
-//     let user = await User.findOne({ email });
-
-//     if (!user) {
-//       user = await User.create({
-//         name: payload.name || email.split('@')[0],
-//         email,
-//         googleId: payload.sub,
-//       });
-//     }
-
-//     res.json({
-//       token: generateToken(user._id),
-//       user: { id: user._id, name: user.name, email: user.email, role: user.role },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const { isBootstrapAdminEmail, publicUser, ROLES } = require('../constants/roles');
+const { sendError } = require('../utils/httpError');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
+
+const assignRoleForEmail = (email) =>
+  (isBootstrapAdminEmail(email) ? ROLES.LEGACY_ADMIN : ROLES.LEGACY_USER);
 
 const buildAuthResponse = (user, token) => ({
   token,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    authProvider: user.authProvider,
-  },
+  user: publicUser(user),
 });
 
-// @route POST /api/auth/register
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -99,7 +26,22 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (typeof name !== 'string' || name.trim().length < 2) {
+      return res.status(400).json({ message: 'Name must be at least 2 characters' });
+    }
+
+    if (typeof email !== 'string' || !EMAIL_RE.test(email)) {
+      return res.status(400).json({ message: 'A valid email is required' });
+    }
+
+    if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
+      return res.status(400).json({
+        message: `Password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters`,
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'Email is already registered' });
     }
@@ -107,24 +49,21 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const role = email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase() ? 'admin' : 'user';
-
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
       authProvider: 'local',
-      role,
+      role: assignRoleForEmail(normalizedEmail),
     });
 
     const token = generateToken(user._id);
     return res.status(201).json(buildAuthResponse(user, token));
   } catch (error) {
-    return res.status(500).json({ message: 'Registration failed', error: error.message });
+    return sendError(res, 500, 'Registration failed', error);
   }
 };
 
-// @route POST /api/auth/login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -133,7 +72,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() }).select('+password');
 
     if (!user || user.authProvider !== 'local') {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -147,11 +86,10 @@ const login = async (req, res) => {
     const token = generateToken(user._id);
     return res.status(200).json(buildAuthResponse(user, token));
   } catch (error) {
-    return res.status(500).json({ message: 'Login failed', error: error.message });
+    return sendError(res, 500, 'Login failed', error);
   }
 };
 
-// @route POST /api/auth/google
 const googleAuth = async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -160,43 +98,43 @@ const googleAuth = async (req, res) => {
       return res.status(400).json({ message: 'Google idToken is required' });
     }
 
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ message: 'Google sign-in is not configured' });
+    }
+
     const ticket = await googleClient.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
+    if (!payload?.email || payload.email_verified === false) {
+      return res.status(401).json({ message: 'Google authentication failed' });
+    }
+
     const email = payload.email.toLowerCase();
-    const name = payload.name;
+    const name = payload.name || email.split('@')[0];
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      const role = email === process.env.ADMIN_EMAIL?.toLowerCase() ? 'admin' : 'user';
       user = await User.create({
         name,
         email,
         authProvider: 'google',
-        role,
+        role: assignRoleForEmail(email),
       });
     }
 
     const token = generateToken(user._id);
     return res.status(200).json(buildAuthResponse(user, token));
   } catch (error) {
-    return res.status(401).json({ message: 'Google authentication failed', error: error.message });
+    return sendError(res, 401, 'Google authentication failed', error);
   }
 };
 
-// @route GET /api/auth/me
 const getMe = async (req, res) => {
-  return res.status(200).json({
-    id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    authProvider: req.user.authProvider,
-  });
+  return res.status(200).json(publicUser(req.user));
 };
 
 module.exports = { register, login, googleAuth, getMe };
