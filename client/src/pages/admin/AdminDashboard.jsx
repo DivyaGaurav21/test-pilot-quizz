@@ -5,8 +5,10 @@ import useExam from "../../hooks/useExam";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import Loading from "../../components/common/Loading";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import useAuth from "../../hooks/useAuth";
 
 const AdminDashboard = () => {
+  const { isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Results-related state (from commented feature)
@@ -106,6 +108,14 @@ const AdminDashboard = () => {
           >
             Institute Applications
           </Link>
+          {isSuperAdmin && (
+            <Link
+              to="/admin/finance"
+              className="inline-flex w-fit items-center rounded-lg border border-green-200 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50"
+            >
+              Finance & Plans
+            </Link>
+          )}
         </div>
 
         {/* Tabs */}

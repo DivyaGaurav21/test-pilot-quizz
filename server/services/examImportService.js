@@ -33,6 +33,11 @@ const validateExamJson = (data) => {
     errors.push('"isPublished" must be a boolean when provided');
   }
 
+  if (data.pricePaise !== undefined
+    && (!Number.isSafeInteger(data.pricePaise) || data.pricePaise < 0)) {
+    errors.push('"pricePaise" must be a non-negative integer');
+  }
+
   if (!Array.isArray(data.questions) || data.questions.length === 0) {
     errors.push('"questions" must be a non-empty array');
     return errors; // no point validating individual questions further
@@ -75,7 +80,7 @@ const validateExamJson = (data) => {
 
 // Creates the Exam and its Questions in the database.
 // Assumes data has already passed validateExamJson.
-const importExam = async (data, { instituteId = null } = {}) => {
+const importExam = async (data, { instituteId = null, createdBy = null } = {}) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -89,14 +94,26 @@ const importExam = async (data, { instituteId = null } = {}) => {
           difficulty: data.difficulty || '',
           duration: data.duration,
           totalQuestions: data.questions.length,
-          isPublished: data.isPublished ?? true,
+          isPublished: instituteId ? false : (data.isPublished ?? true),
           instituteId,
+          pricePaise: data.pricePaise ?? 0,
         },
       ],
       { session }
     );
 
     const createdExam = exam[0];
+
+    if (instituteId && data.isPublished === true) {
+      const { recordPublication } = require('./monetizationService');
+      await recordPublication({
+        instituteId,
+        examId: createdExam._id,
+        userId: createdBy,
+        session,
+      });
+      createdExam.isPublished = true;
+    }
 
     const questionsToInsert = data.questions.map((q) => ({
       examId: createdExam._id,

@@ -13,6 +13,7 @@ const buildAuthResponse = (user, token) => ({
     email: user.email,
     role: user.role,
     authProvider: user.authProvider,
+    isSuperAdmin: user.role === 'super_admin',
   },
 });
 
@@ -33,14 +34,12 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const role = email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase() ? 'admin' : 'user';
-
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       authProvider: 'local',
-      role,
+      role: 'user',
     });
 
     const token = generateToken(user._id);
@@ -98,12 +97,11 @@ const googleAuth = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      const role = email === process.env.ADMIN_EMAIL?.toLowerCase() ? 'admin' : 'user';
       user = await User.create({
         name,
         email,
         authProvider: 'google',
-        role,
+        role: 'user',
       });
     }
 
@@ -122,6 +120,7 @@ const getMe = async (req, res) => {
     email: req.user.email,
     role: req.user.role,
     authProvider: req.user.authProvider,
+    isSuperAdmin: req.user.role === 'super_admin',
   });
 };
 

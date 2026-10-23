@@ -68,7 +68,7 @@ const importInstituteExam = async (req, res) => {
       return res.status(400).json({ message: 'Invalid exam JSON', errors });
     }
 
-    const exam = await importExam(req.body, { instituteId: req.institute._id });
+    const exam = await importExam(req.body, { instituteId: req.institute._id, createdBy: req.user._id });
     return res.status(201).json({
       message: 'Exam imported successfully',
       exam: {
@@ -96,24 +96,53 @@ const getInstituteExams = async (req, res) => {
 const updateInstituteExam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { isPublished } = req.body;
+    const { isPublished, pricePaise } = req.body || {};
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({ message: 'Invalid exam id' });
     }
 
-    if (typeof isPublished !== 'boolean') {
-      return res.status(400).json({ message: 'isPublished must be a boolean' });
+    if (typeof isPublished !== 'boolean' && pricePaise === undefined) {
+      return res.status(400).json({ message: 'isPublished or pricePaise is required' });
     }
 
-    const exam = await Exam.findOneAndUpdate(
-      { _id: id, instituteId: req.institute._id },
-      { $set: { isPublished } },
-      { new: true, runValidators: true },
-    );
+    if (pricePaise !== undefined && (!Number.isSafeInteger(pricePaise) || pricePaise < 0)) {
+      return res.status(400).json({ message: 'pricePaise must be a non-negative integer' });
+    }
 
-    if (!exam) {
-      return res.status(404).json({ message: 'Exam not found' });
+    const session = await mongoose.startSession();
+    let exam;
+    try {
+      await session.withTransaction(async () => {
+        exam = await Exam.findOne({ _id: id, instituteId: req.institute._id }).session(session);
+        if (!exam) {
+          const err = new Error('Exam not found');
+          err.statusCode = 404;
+          throw err;
+        }
+
+        if (pricePaise !== undefined) exam.pricePaise = pricePaise;
+        if (isPublished === true && !exam.isPublished) {
+          const { recordPublication } = require('../services/monetizationService');
+          await recordPublication({
+            instituteId: req.institute._id,
+            examId: exam._id,
+            userId: req.user._id,
+            session,
+          });
+          exam.isPublished = true;
+        } else if (isPublished === false && exam.isPublished) {
+          exam.isPublished = false;
+        }
+        await exam.save({ session });
+      });
+    } catch (error) {
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({ message: error.message });
+      }
+      throw error;
+    } finally {
+      await session.endSession();
     }
 
     return res.status(200).json(exam);

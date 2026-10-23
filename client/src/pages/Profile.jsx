@@ -8,7 +8,7 @@ const Profile = () => {
   const { t } = useLanguage();
 
   const initial = user?.name?.charAt(0)?.toUpperCase() || "U";
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString(undefined, {

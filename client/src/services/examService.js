@@ -15,6 +15,11 @@ const startExam = async (examId) => {
   return response.data;
 };
 
+const purchaseExam = async (examId) => {
+  const response = await api.post(`/finance/exams/${examId}/purchases`);
+  return response.data;
+};
+
 const submitExam = async (examId, answers, timeTaken) => {
   const response = await api.post(`/exams/${examId}/submit`, {
     answers,
@@ -32,6 +37,7 @@ const examService = {
   getExams,
   getExamById,
   startExam,
+  purchaseExam,
   submitExam,
   deleteExam
 };

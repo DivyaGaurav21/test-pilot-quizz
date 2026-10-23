@@ -15,10 +15,11 @@
 - [x] Add institute application and owner exam-management screens.
 
 ## Phase 3: Add SaaS operations and monetization
-- Implement subscription plans (monthly/yearly) with active/past-due/expired states
-- Enforce a three-lifetime-free-test quota per institute with a concurrency-safe ledger
-- Add paid-test publishing entitlements and audit logging for publication decisions
-- Track revenue, commission, payout balances, and platform-level reporting
+- [x] Add configurable monthly/yearly subscription plans with pending, active, past-due, and expired states; activate only after SUPER_ADMIN payment verification.
+- [x] Enforce three lifetime free publications and subscription-period limits atomically; drafts do not count and unpublishing does not restore quota.
+- [x] Add paid exam purchase verification, immutable financial ledger entries, commission/refund/fee/tax accounting, and publication audit events.
+- [x] Add institute payout requests, SUPER_ADMIN approval and manual reconciliation states, minimum threshold, and platform financial summaries.
+- [x] Document initial financial rules and the gateway/bank reconciliation boundaries in [FINANCIAL_POLICY.md](./FINANCIAL_POLICY.md).
 
 ## Phase 4: Production-readiness and security
 - Centralize authorization helpers, request validation, and structured error handling
@@ -33,4 +34,4 @@
 - Track live metrics for attempts, purchases, and institute onboarding
 
 ## Notes
-This repository is already a functional starter, so the priority is to harden the existing app while preserving current exams, results, and routes. The business rules in the original SaaS brief should be applied in later phases without deleting or rewriting existing working behavior.
+This repository is a functional starter. Changes preserve legacy public exams/results and treat existing records without `instituteId` as platform-owned/unowned. Live gateway and bank-transfer integrations remain deferred; see [FINANCIAL_POLICY.md](./FINANCIAL_POLICY.md) for the current manual-verification boundaries.

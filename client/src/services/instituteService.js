@@ -20,8 +20,11 @@ const importExamJson = async (examData) => {
   return response.data;
 };
 
-const updateExam = async (examId, isPublished) => {
-  const response = await api.patch(`/institutes/me/exams/${examId}`, { isPublished });
+const updateExam = async (examId, isPublished, pricePaise) => {
+  const response = await api.patch(`/institutes/me/exams/${examId}`, {
+    ...(isPublished !== undefined ? { isPublished } : {}),
+    ...(pricePaise !== undefined ? { pricePaise } : {}),
+  });
   return response.data;
 };
 

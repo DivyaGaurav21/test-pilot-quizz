@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const mongoose = require('mongoose');
 const Exam = require('../models/Exam');
 const { updateInstituteExam } = require('../controllers/instituteController');
 
@@ -18,15 +19,28 @@ const buildResponse = () => ({
 
 test('institute exam updates are scoped to the authenticated institute', async (t) => {
   let filter;
-  t.mock.method(Exam, 'findOneAndUpdate', async (query) => {
+  const session = {
+    async withTransaction(callback) {
+      await callback();
+    },
+    async endSession() {},
+  };
+  const exam = {
+    isPublished: false,
+    pricePaise: 0,
+    async save() {},
+  };
+  t.mock.method(mongoose, 'startSession', async () => session);
+  t.mock.method(Exam, 'findOne', (query) => {
     filter = query;
-    return null;
+    return { session: () => exam };
   });
 
   const res = buildResponse();
   await updateInstituteExam({
     params: { id: '507f1f77bcf86cd799439011' },
-    body: { isPublished: false, instituteId: 'attacker-controlled-id' },
+    body: { pricePaise: 4500, instituteId: 'attacker-controlled-id' },
+    user: { _id: 'owner-1' },
     institute: { _id: '507f191e810c19729de860ea' },
   }, res);
 
@@ -34,6 +48,6 @@ test('institute exam updates are scoped to the authenticated institute', async (
     _id: '507f1f77bcf86cd799439011',
     instituteId: '507f191e810c19729de860ea',
   });
-  assert.equal(res.statusCode, 404);
-  assert.deepEqual(res.body, { message: 'Exam not found' });
+  assert.equal(res.statusCode, 200);
+  assert.equal(exam.pricePaise, 4500);
 });

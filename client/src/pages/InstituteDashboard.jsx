@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import JsonQuestionImporter from "../components/admin/JsonQuestionImporter";
 import instituteService from "../services/instituteService";
+import financeService from "../services/financeService";
 
 const InstituteDashboard = () => {
   const [institute, setInstitute] = useState(null);
@@ -11,6 +12,10 @@ const InstituteDashboard = () => {
   const [saving, setSaving] = useState(false);
   const [exams, setExams] = useState([]);
   const [results, setResults] = useState([]);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [financeInfo, setFinanceInfo] = useState(null);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [examPrices, setExamPrices] = useState({});
 
   const loadInstitute = useCallback(async () => {
     try {
@@ -21,12 +26,17 @@ const InstituteDashboard = () => {
       setName(currentInstitute?.name || "");
       setContactEmail(currentInstitute?.contactEmail || "");
       if (currentInstitute?.status === "approved") {
-        const [currentExams, currentResults] = await Promise.all([
+        const [currentExams, currentResults, currentSubscription, currentFinance] = await Promise.all([
           instituteService.getExams(),
           instituteService.getResults(),
+          financeService.getSubscription(),
+          financeService.getInstituteFinance(),
         ]);
         setExams(currentExams);
         setResults(currentResults);
+        setSubscriptionInfo(currentSubscription);
+        setFinanceInfo(currentFinance);
+        setExamPrices(Object.fromEntries(currentExams.map((exam) => [exam._id, String(exam.pricePaise / 100)])));
       }
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to load institute information.");
@@ -60,6 +70,45 @@ const InstituteDashboard = () => {
       setExams((current) => current.map((item) => item._id === updatedExam._id ? updatedExam : item));
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to update exam visibility.");
+    }
+  };
+
+  const handlePriceChange = async (exam) => {
+    const rupees = Number(examPrices[exam._id]);
+    if (!Number.isFinite(rupees) || rupees < 0 || !Number.isSafeInteger(Math.round(rupees * 100))) {
+      setError("Enter a valid non-negative price in rupees.");
+      return;
+    }
+    try {
+      const updatedExam = await instituteService.updateExam(exam._id, undefined, Math.round(rupees * 100));
+      setExams((current) => current.map((item) => item._id === updatedExam._id ? updatedExam : item));
+      setError("");
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to update exam price.");
+    }
+  };
+
+  const handleRequestSubscription = async (plan) => {
+    try {
+      await financeService.requestSubscription(plan);
+      const currentSubscription = await financeService.getSubscription();
+      setSubscriptionInfo(currentSubscription);
+      setError("");
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to request a subscription.");
+    }
+  };
+
+  const handlePayoutRequest = async (event) => {
+    event.preventDefault();
+    const amountPaise = Math.round(Number(payoutAmount) * 100);
+    try {
+      await financeService.requestPayout(amountPaise);
+      setPayoutAmount("");
+      setFinanceInfo(await financeService.getInstituteFinance());
+      setError("");
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to request a payout.");
     }
   };
 
@@ -156,6 +205,42 @@ const InstituteDashboard = () => {
               </p>
             </section>
 
+            {subscriptionInfo && (
+              <section className="space-y-4 rounded-xl border bg-white p-6 shadow-sm">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Subscription and publishing quota</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Lifetime free publications: {subscriptionInfo.freePublicationsUsed}/{subscriptionInfo.freePublicationLimit}.
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {subscriptionInfo.subscription
+                      ? `Latest subscription: ${subscriptionInfo.subscription.status}${subscriptionInfo.subscription.endsAt ? ` · ends ${new Date(subscriptionInfo.subscription.endsAt).toLocaleDateString()}` : ""} · ${subscriptionInfo.subscription.publicationsUsed}/${subscriptionInfo.subscription.publicationLimit} publications`
+                      : "No subscription request yet."}
+                  </p>
+                </div>
+                {subscriptionInfo.subscription?.status !== "active" && (
+                  <>
+                    <div className="flex flex-wrap gap-3">
+                      {["monthly", "yearly"].map((plan) => (
+                        <button
+                          key={plan}
+                          type="button"
+                          onClick={() => handleRequestSubscription(plan)}
+                          disabled={subscriptionInfo.subscription?.status === "pending"}
+                          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold capitalize text-white disabled:opacity-50"
+                        >
+                          Request {plan} · {subscriptionInfo.currency} {(subscriptionInfo.plans[plan].pricePaise / 100).toFixed(2)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Payments are handled offline for now. Contact the platform administrator with your request; the subscription activates only after payment verification.
+                    </p>
+                  </>
+                )}
+              </section>
+            )}
+
             <section className="rounded-xl border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">Import an exam</h2>
               <JsonQuestionImporter importExam={instituteService.importExamJson} onSuccess={loadInstitute} />
@@ -173,6 +258,22 @@ const InstituteDashboard = () => {
                         <h3 className="font-semibold text-slate-900">{exam.title}</h3>
                         <p className="text-sm text-slate-600">{exam.subject} · {exam.totalQuestions} questions</p>
                         <p className="text-xs text-slate-500">{exam.isPublished ? "Publicly listed" : "Unpublished"}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <label className="text-xs text-slate-600">
+                            Price ({subscriptionInfo?.currency || "INR"})
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={examPrices[exam._id] ?? "0.00"}
+                              onChange={(event) => setExamPrices((current) => ({ ...current, [exam._id]: event.target.value }))}
+                              className="ml-2 w-28 rounded border border-slate-300 px-2 py-1"
+                            />
+                          </label>
+                          <button type="button" onClick={() => handlePriceChange(exam)} className="rounded border px-2 py-1 text-xs font-semibold text-slate-700">
+                            Save price
+                          </button>
+                        </div>
                       </div>
                       <button
                         type="button"
@@ -186,6 +287,48 @@ const InstituteDashboard = () => {
                 </ul>
               )}
             </section>
+
+            {financeInfo && (
+              <section className="space-y-4 rounded-xl border bg-white p-6 shadow-sm">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Marketplace balance and payouts</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Available: {financeInfo.currency} {(financeInfo.availableBalancePaise / 100).toFixed(2)}
+                    {" · "}Minimum payout: {financeInfo.currency} {(financeInfo.minimumPayoutPaise / 100).toFixed(2)}
+                    {" · "}Manual monthly payout
+                  </p>
+                </div>
+                <form onSubmit={handlePayoutRequest} className="flex flex-wrap items-end gap-3">
+                  <label className="text-sm text-slate-700">
+                    Request amount ({financeInfo.currency})
+                    <input required type="number" min="0.01" step="0.01" value={payoutAmount} onChange={(event) => setPayoutAmount(event.target.value)} className="mt-1 block rounded-lg border border-slate-300 px-3 py-2" />
+                  </label>
+                  <button type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white">Request payout</button>
+                </form>
+                {financeInfo.payouts.length > 0 && (
+                  <ul className="divide-y divide-slate-200 text-sm">
+                    {financeInfo.payouts.map((payout) => (
+                      <li key={payout._id} className="py-2">
+                        ₹{(payout.amountPaise / 100).toFixed(2)} · {payout.status}
+                        {payout.confirmationReference && ` · ${payout.confirmationReference}`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {financeInfo.entries.length > 0 && (
+                  <details>
+                    <summary className="cursor-pointer text-sm font-semibold text-indigo-700">View financial ledger</summary>
+                    <ul className="mt-2 divide-y divide-slate-200 text-xs">
+                      {financeInfo.entries.map((entry) => (
+                        <li key={entry._id} className="py-2">
+                          {new Date(entry.createdAt).toLocaleDateString()} · {entry.type} · {entry.amountPaise} paise · {entry.notes || entry.reference}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </section>
+            )}
 
             <section className="rounded-xl border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">Student results</h2>

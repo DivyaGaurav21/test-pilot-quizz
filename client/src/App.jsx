@@ -16,6 +16,7 @@ import InstituteDashboard from "./pages/InstituteDashboard.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminImport from "./pages/admin/AdminImport.jsx";
 import InstituteApplications from "./pages/admin/InstituteApplications.jsx";
+import FinanceDashboard from "./pages/admin/FinanceDashboard.jsx";
 
 function App() {
   return (
@@ -94,6 +95,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <InstituteApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/finance"
+            element={
+              <ProtectedRoute adminOnly>
+                <FinanceDashboard />
               </ProtectedRoute>
             }
           />

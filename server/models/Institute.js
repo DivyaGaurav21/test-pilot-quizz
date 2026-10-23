@@ -24,6 +24,15 @@ const instituteSchema = new mongoose.Schema({
     default: 'pending',
     required: true,
   },
+  freePublicationsUsed: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  payoutBalanceVersion: {
+    type: Number,
+    default: 0,
+  },
   rejectionReason: {
     type: String,
     trim: true,

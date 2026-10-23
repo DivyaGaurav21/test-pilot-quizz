@@ -56,6 +56,15 @@ const examSchema = new mongoose.Schema({
     ref: 'Institute',
     default: null,
   },
+  pricePaise: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  archivedAt: {
+    type: Date,
+    default: null,
+  },
 }, {
   timestamps: { createdAt: true, updatedAt: false },
 });

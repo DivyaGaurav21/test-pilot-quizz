@@ -2,15 +2,29 @@ const mongoose = require('mongoose');
 const Exam = require('../models/Exam');
 const Question = require('../models/Question');
 const Result = require('../models/Result');
+const ExamPurchase = require('../models/ExamPurchase');
+const { getSettings } = require('../services/monetizationService');
 const calculateResult = require('../utils/calculateResult');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+const hasExamAccess = async (exam, userId) => {
+  if (exam.pricePaise <= 0) return true;
+  return Boolean(await ExamPurchase.exists({
+    examId: exam._id,
+    buyerId: userId,
+    status: 'verified',
+  }));
+};
+
 // @route GET /api/exams
 const getExams = async (req, res) => {
   try {
-    const exams = await Exam.find({ isPublished: true }).sort({ createdAt: -1 });
-    return res.status(200).json(exams);
+    const [exams, settings] = await Promise.all([
+      Exam.find({ isPublished: true }).sort({ createdAt: -1 }),
+      getSettings(),
+    ]);
+    return res.status(200).json(exams.map((exam) => ({ ...exam.toObject(), priceCurrency: settings.currency })));
   } catch (error) {
     return res.status(500).json({ message: 'Failed to fetch exams', error: error.message });
   }
@@ -31,7 +45,8 @@ const getExamById = async (req, res) => {
       return res.status(404).json({ message: 'Exam not found' });
     }
 
-    return res.status(200).json(exam);
+    const settings = await getSettings();
+    return res.status(200).json({ ...exam.toObject(), priceCurrency: settings.currency });
   } catch (error) {
     return res.status(500).json({ message: 'Failed to fetch exam', error: error.message });
   }
@@ -54,9 +69,17 @@ const startExam = async (req, res) => {
       return res.status(404).json({ message: 'Exam not found' });
     }
 
+    if (!(await hasExamAccess(exam, req.user._id))) {
+      return res.status(402).json({ message: 'Verified purchase required to start this exam', pricePaise: exam.pricePaise });
+    }
+
     const questions = await Question.find({ examId: id }).select('-correctAnswer -explanation');
 
-    return res.status(200).json({ exam, questions });
+    const settings = await getSettings();
+    return res.status(200).json({
+      exam: { ...exam.toObject(), priceCurrency: settings.currency },
+      questions,
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Failed to start exam', error: error.message });
   }
@@ -77,6 +100,10 @@ const submitExam = async (req, res) => {
 
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
+    }
+
+    if (!(await hasExamAccess(exam, req.user._id))) {
+      return res.status(402).json({ message: 'Verified purchase required to submit this exam', pricePaise: exam.pricePaise });
     }
 
     if (typeof timeTaken !== 'number' || timeTaken < 0) {

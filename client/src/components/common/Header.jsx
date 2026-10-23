@@ -47,7 +47,7 @@ export default function Header() {
             </NavLink>
           )}
 
-          {user?.role === "admin" && (
+          {(user?.role === "admin" || user?.role === "super_admin") && (
             <NavLink to="/admin" className={navLinkClass}>
               {t("nav.admin")}
             </NavLink>
@@ -148,7 +148,7 @@ export default function Header() {
               </NavLink>
             )}
 
-            {user?.role === "admin" && (
+            {(user?.role === "admin" || user?.role === "super_admin") && (
               <NavLink
                 to="/admin"
                 onClick={() => setMenuOpen(false)}

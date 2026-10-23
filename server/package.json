@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "promote:super-admin": "node scripts/promoteSuperAdmin.js",
     "test": "node --test"
   },
   "dependencies": {
