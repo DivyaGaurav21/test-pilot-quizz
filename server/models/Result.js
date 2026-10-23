@@ -13,6 +13,11 @@ const resultSchema = new mongoose.Schema({
     ref: 'Exam',
     required: true,
   },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null,
+  },
   score: {
     type: Number,
     required: true,

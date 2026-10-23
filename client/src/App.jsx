@@ -11,9 +11,11 @@ import ExamInstructions from "./pages/ExamInstructions.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import ResultPage from "./pages/ResultPage.jsx";
 import Profile from "./pages/Profile.jsx";
+import InstituteDashboard from "./pages/InstituteDashboard.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminImport from "./pages/admin/AdminImport.jsx";
+import InstituteApplications from "./pages/admin/InstituteApplications.jsx";
 
 function App() {
   return (
@@ -61,6 +63,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/institute"
+            element={
+              <ProtectedRoute>
+                <InstituteDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin routes (require authentication + admin role) */}
           <Route
@@ -76,6 +86,14 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminImport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/institutes"
+            element={
+              <ProtectedRoute adminOnly>
+                <InstituteApplications />
               </ProtectedRoute>
             }
           />

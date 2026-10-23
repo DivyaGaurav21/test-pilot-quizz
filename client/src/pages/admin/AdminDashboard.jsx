@@ -100,6 +100,12 @@ const AdminDashboard = () => {
             </svg>
             Import Exam JSON
           </Link>
+          <Link
+            to="/admin/institutes"
+            className="inline-flex w-fit items-center rounded-lg border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+          >
+            Institute Applications
+          </Link>
         </div>
 
         {/* Tabs */}

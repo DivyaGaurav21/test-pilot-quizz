@@ -36,7 +36,7 @@ This repository is a MERN-based online-test platform starter with a Vite React f
 2. Admin authorization was incorrectly coupled to the configured `ADMIN_EMAIL` value instead of using the authenticated user role. A user with the `admin` role could be denied while a non-admin with the matching email could pass.
 3. Exam submissions accepted client-supplied answer objects without validating that the submitted keys reflect real question IDs or valid option values. This creates a tampering risk and should be sanitized server-side before scoring.
 4. The repo has no automated test suite or CI check for backend/auth safety, so regressions are not caught early.
-5. The platform has no multi-tenant institute model yet; the current app is a single-tenant starter. This is intentionally a gap to be addressed in the implementation plan, not a failure of the current app itself.
+5. Institute ownership is now available for exams, questions, and submitted results, with approval-gated institute management. Orders and separate attempt records are not modeled in the current application; subscription and billing concerns remain future work.
 
 ## Suggested next steps
 - Repair the JWT auth/header flow and server-side authorization

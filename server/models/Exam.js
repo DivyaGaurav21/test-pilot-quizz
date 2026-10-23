@@ -51,6 +51,11 @@ const examSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null,
+  },
 }, {
   timestamps: { createdAt: true, updatedAt: false },
 });

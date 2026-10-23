@@ -7,7 +7,7 @@ const Question = require('../models/Question');
 const validateExamJson = (data) => {
   const errors = [];
 
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     errors.push('Invalid JSON payload');
     return errors;
   }
@@ -29,6 +29,10 @@ const validateExamJson = (data) => {
     errors.push('"duration" is required and must be a positive number');
   }
 
+  if (data.isPublished !== undefined && typeof data.isPublished !== 'boolean') {
+    errors.push('"isPublished" must be a boolean when provided');
+  }
+
   if (!Array.isArray(data.questions) || data.questions.length === 0) {
     errors.push('"questions" must be a non-empty array');
     return errors; // no point validating individual questions further
@@ -36,6 +40,11 @@ const validateExamJson = (data) => {
 
   data.questions.forEach((q, index) => {
     const label = `Question ${index + 1}`;
+
+    if (!q || typeof q !== 'object' || Array.isArray(q)) {
+      errors.push(`${label}: must be an object`);
+      return;
+    }
 
     if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
       errors.push(`${label}: question text is required`);
@@ -66,7 +75,7 @@ const validateExamJson = (data) => {
 
 // Creates the Exam and its Questions in the database.
 // Assumes data has already passed validateExamJson.
-const importExam = async (data) => {
+const importExam = async (data, { instituteId = null } = {}) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -80,7 +89,8 @@ const importExam = async (data) => {
           difficulty: data.difficulty || '',
           duration: data.duration,
           totalQuestions: data.questions.length,
-          isPublished: true,
+          isPublished: data.isPublished ?? true,
+          instituteId,
         },
       ],
       { session }
@@ -90,6 +100,7 @@ const importExam = async (data) => {
 
     const questionsToInsert = data.questions.map((q) => ({
       examId: createdExam._id,
+      instituteId,
       question: q.question,
       options: q.options,
       correctAnswer: q.correctAnswer,

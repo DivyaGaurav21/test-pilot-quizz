@@ -10,9 +10,21 @@ const getAdminResults = async () => {
   return response.data;
 };
 
+const getInstituteApplications = async () => {
+  const response = await api.get("/admin/institutes");
+  return response.data;
+};
+
+const reviewInstitute = async (instituteId, status, rejectionReason = "") => {
+  const response = await api.patch(`/admin/institutes/${instituteId}`, { status, rejectionReason });
+  return response.data;
+};
+
 const adminService = {
   importExamJson,
   getAdminResults,
+  getInstituteApplications,
+  reviewInstitute,
 };
 
 export default adminService;

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Exam = require('../models/Exam');
 const Question = require('../models/Question')
 const Result = require('../models/Result');
+const Institute = require('../models/Institute');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -44,6 +45,71 @@ const getAllResults = async (req, res) => {
     return res.status(200).json(results);
   } catch (error) {
     return res.status(500).json({ message: 'Failed to fetch results', error: error.message });
+  }
+};
+
+const getInstituteApplications = async (req, res) => {
+  try {
+    const statuses = ['pending', 'approved', 'rejected', 'suspended'];
+    const status = req.query.status;
+    const filter = {};
+
+    if (status !== undefined) {
+      if (!statuses.includes(status)) {
+        return res.status(400).json({ message: 'Invalid institute status filter' });
+      }
+      filter.status = status;
+    }
+
+    const institutes = await Institute.find(filter)
+      .populate('ownerId', 'name email')
+      .populate('reviewedBy', 'name email')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json(institutes);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch institute applications', error: error.message });
+  }
+};
+
+const reviewInstituteApplication = async (req, res) => {
+  const { id } = req.params;
+  const { status, rejectionReason = '' } = req.body || {};
+  const allowedStatuses = ['approved', 'rejected', 'suspended'];
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid institute id' });
+  }
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Status must be approved, rejected, or suspended' });
+  }
+
+  if (typeof rejectionReason !== 'string') {
+    return res.status(400).json({ message: 'rejectionReason must be a string' });
+  }
+
+  try {
+    const institute = await Institute.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status,
+          rejectionReason: status === 'rejected' ? rejectionReason.trim() : '',
+          reviewedBy: req.user._id,
+          reviewedAt: new Date(),
+        },
+      },
+      { new: true, runValidators: true },
+    ).populate('ownerId', 'name email').populate('reviewedBy', 'name email');
+
+    if (!institute) {
+      return res.status(404).json({ message: 'Institute application not found' });
+    }
+
+    return res.status(200).json(institute);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to review institute application', error: error.message });
   }
 };
 
@@ -122,4 +188,10 @@ const deleteExam = async (req, res) => {
 };
 
 
-module.exports = { importJson, getAllResults , deleteExam};
+module.exports = {
+  importJson,
+  getAllResults,
+  getInstituteApplications,
+  reviewInstituteApplication,
+  deleteExam,
+};

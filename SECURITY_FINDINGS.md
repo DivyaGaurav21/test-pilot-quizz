@@ -33,11 +33,6 @@ Mitigation:
 - Add Node test coverage for admin middleware and result logic.
 - Run the tests in CI and on release branches before deployment.
 
-## Severity: Low
-### Missing explicit multi-tenant ownership rules
-The current model is single-tenant; institute-level ownership and resource isolation are not yet enforced across the database schema or route layer.
-
-Mitigation:
-- Add `instituteId` as a mandatory ownership field for institute-owned records.
-- Enforce access checks in every protected read/write endpoint.
-- Ensure that public APIs never reveal private institute resources.
+## Resolved in Phase 2
+### Institute ownership and access boundaries
+Institute ownership is recorded on exams, questions, and submitted results. Institute management endpoints require an approved owner and scope exam mutations and result reads to that owner's institute. Published exams are intentionally public; unpublished exams are not returned by public exam endpoints. Legacy records remain unowned and unchanged. Orders and separate attempt records are not modeled yet and therefore are not covered by institute ownership.

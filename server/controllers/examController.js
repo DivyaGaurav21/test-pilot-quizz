@@ -109,6 +109,7 @@ const submitExam = async (req, res) => {
     const result = await Result.create({
       userId: req.user._id,
       examId: id,
+      instituteId: exam.instituteId || null,
       ...resultData,
     });
 

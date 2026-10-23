@@ -56,6 +56,13 @@ const Profile = () => {
               </p>
             </div>
 
+            <Link
+              to="/institute"
+              className="mt-5 inline-flex rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+            >
+              Institute Portal
+            </Link>
+
             {/* Info list */}
             <div className="mt-6 divide-y divide-gray-100 rounded-xl border border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-3 px-4 py-4">

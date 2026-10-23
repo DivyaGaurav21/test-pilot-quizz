@@ -6,6 +6,11 @@ const questionSchema = new mongoose.Schema({
     ref: 'Exam',
     required: true,
   },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null,
+  },
   question: {
     type: String,
     required: [true, 'Question text is required'],

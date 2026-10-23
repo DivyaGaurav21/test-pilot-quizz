@@ -8,10 +8,11 @@
 - Document environment requirements and deployment constraints
 
 ## Phase 2: Harden the product core
-- Introduce institute ownership on exams, questions, orders, attempts, and results
-- Add explicit institute registration and approval workflow with statuses: pending, approved, rejected, suspended
-- Enforce backend authorization for all reads/writes and reject cross-institute tampering
-- Keep public exam browsing separate from private institute-owned resources
+- [x] Add institute ownership to exams, questions, and submitted results. The current application has no orders or separate attempts collections to scope.
+- [x] Add institute registration and global-admin approval with pending, approved, rejected, and suspended statuses.
+- [x] Enforce approved-owner access and institute-scoped exam/result queries; preserve global-admin access.
+- [x] Keep published exams public while allowing approved owners to unpublish their own exams. Legacy records remain unowned and unchanged.
+- [x] Add institute application and owner exam-management screens.
 
 ## Phase 3: Add SaaS operations and monetization
 - Implement subscription plans (monthly/yearly) with active/past-due/expired states

@@ -45,6 +45,10 @@ const validateExamData = (data) => {
     errors.push("duration must be a positive number.");
   }
 
+  if (data.isPublished !== undefined && typeof data.isPublished !== "boolean") {
+    errors.push("isPublished must be a boolean when provided.");
+  }
+
   if (!Array.isArray(data.questions) || data.questions.length === 0) {
     errors.push("questions must be a non-empty array.");
     return errors;
@@ -86,7 +90,7 @@ const validateExamData = (data) => {
   return errors;
 };
 
-const JsonQuestionImporter = ({ onSuccess }) => {
+const JsonQuestionImporter = ({ onSuccess, importExam = adminService.importExamJson }) => {
   const [jsonText, setJsonText] = useState(
     JSON.stringify(SAMPLE_JSON, null, 2)
   );
@@ -136,7 +140,7 @@ const JsonQuestionImporter = ({ onSuccess }) => {
     try {
       setLoading(true);
 
-      const response = await adminService.importExamJson(data);
+      const response = await importExam(data);
 
       setMessage(response?.message || "Exam imported successfully.");
       onSuccess?.(response);
