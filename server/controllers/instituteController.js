@@ -61,6 +61,59 @@ const getMyInstitute = async (req, res) => {
   }
 };
 
+const getPopularInstitutes = async (req, res) => {
+  try {
+    const institutes = await Institute.aggregate([
+      { $match: { status: 'approved' } },
+      {
+        $lookup: {
+          from: Exam.collection.name,
+          let: { instituteId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$instituteId', '$$instituteId'] },
+                    { $eq: ['$isPublished', true] },
+                  ],
+                },
+              },
+            },
+            { $count: 'count' },
+          ],
+          as: 'examStats',
+        },
+      },
+      {
+        $lookup: {
+          from: Result.collection.name,
+          let: { instituteId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$instituteId', '$$instituteId'] } } },
+            { $count: 'count' },
+          ],
+          as: 'resultStats',
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          createdAt: 1,
+          publishedExamCount: { $ifNull: [{ $arrayElemAt: ['$examStats.count', 0] }, 0] },
+          resultCount: { $ifNull: [{ $arrayElemAt: ['$resultStats.count', 0] }, 0] },
+        },
+      },
+      { $match: { publishedExamCount: { $gt: 0 } } },
+      { $sort: { resultCount: -1, publishedExamCount: -1, createdAt: -1 } },
+      { $limit: 6 },
+    ]);
+    return res.status(200).json(institutes);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch popular institutes', error: error.message });
+  }
+};
+
 const importInstituteExam = async (req, res) => {
   try {
     const errors = validateExamJson(req.body);
@@ -167,6 +220,7 @@ const getInstituteResults = async (req, res) => {
 module.exports = {
   registerInstitute,
   getMyInstitute,
+  getPopularInstitutes,
   importInstituteExam,
   getInstituteExams,
   updateInstituteExam,

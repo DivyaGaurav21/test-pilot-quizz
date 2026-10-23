@@ -1,9 +1,8 @@
 const bcrypt = require('bcryptjs');
-const { OAuth2Client } = require('google-auth-library');
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const Institute = require('../models/Institute');
 const generateToken = require('../utils/generateToken');
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const buildAuthResponse = (user, token) => ({
   token,
@@ -20,32 +19,69 @@ const buildAuthResponse = (user, token) => ({
 // @route POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, accountType = 'user', instituteName, contactEmail } = req.body || {};
 
-    if (!name || !email || !password) {
+    if (typeof name !== 'string' || !name.trim()
+      || typeof email !== 'string' || !email.trim()
+      || typeof password !== 'string' || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
-
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email is already registered' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || password.length < 6) {
+      return res.status(400).json({ message: 'Provide a valid email and a password with at least 6 characters' });
+    }
+    if (!['user', 'institute'].includes(accountType)) {
+      return res.status(400).json({ message: 'accountType must be user or institute' });
+    }
+    const normalizedInstituteEmail = typeof contactEmail === 'string' ? contactEmail.trim().toLowerCase() : '';
+    if (accountType === 'institute'
+      && (typeof instituteName !== 'string' || !instituteName.trim()
+        || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInstituteEmail))) {
+      return res.status(400).json({ message: 'A valid institute name and contact email are required' });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const session = await mongoose.startSession();
+    let user;
+    let institute;
+    try {
+      await session.withTransaction(async () => {
+        const existingUser = await User.findOne({ email: email.trim().toLowerCase() }).session(session);
+        if (existingUser) {
+          const error = new Error('Email is already registered');
+          error.statusCode = 409;
+          throw error;
+        }
+        [user] = await User.create([{
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password: hashedPassword,
+          authProvider: 'local',
+          role: 'user',
+        }], { session });
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      authProvider: 'local',
-      role: 'user',
-    });
+        if (accountType === 'institute') {
+          [institute] = await Institute.create([{
+            name: instituteName.trim(),
+            contactEmail: normalizedInstituteEmail,
+            ownerId: user._id,
+          }], { session });
+        }
+      });
+    } finally {
+      await session.endSession();
+    }
 
     const token = generateToken(user._id);
-    return res.status(201).json(buildAuthResponse(user, token));
+    return res.status(201).json({
+      ...buildAuthResponse(user, token),
+      ...(institute ? { institute } : {}),
+    });
   } catch (error) {
-    return res.status(500).json({ message: 'Registration failed', error: error.message });
+    return res.status(error.statusCode || (error.code === 11000 ? 409 : 500)).json({
+      message: error.statusCode ? error.message : 'Registration failed',
+      ...(error.statusCode ? {} : { error: error.message }),
+    });
   }
 };
 
@@ -76,42 +112,6 @@ const login = async (req, res) => {
   }
 };
 
-// @route POST /api/auth/google
-const googleAuth = async (req, res) => {
-  try {
-    const { idToken } = req.body;
-
-    if (!idToken) {
-      return res.status(400).json({ message: 'Google idToken is required' });
-    }
-
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const email = payload.email.toLowerCase();
-    const name = payload.name;
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      user = await User.create({
-        name,
-        email,
-        authProvider: 'google',
-        role: 'user',
-      });
-    }
-
-    const token = generateToken(user._id);
-    return res.status(200).json(buildAuthResponse(user, token));
-  } catch (error) {
-    return res.status(401).json({ message: 'Google authentication failed', error: error.message });
-  }
-};
-
 // @route GET /api/auth/me
 const getMe = async (req, res) => {
   return res.status(200).json({
@@ -124,4 +124,4 @@ const getMe = async (req, res) => {
   });
 };
 
-module.exports = { register, login, googleAuth, getMe };
+module.exports = { register, login, getMe };

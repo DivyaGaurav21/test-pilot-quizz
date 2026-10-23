@@ -3,7 +3,7 @@
 ## Project overview
 This repository is a MERN-based online-test platform starter with a Vite React frontend and an Express/Mongoose backend. The application already includes authentication, exam publishing and intake flows, result generation, PDF export, and an admin import pipeline. The code is structured around a small but clear domain model:
 
-- Users: local or Google-authenticated users with `user`/`admin`/`super_admin` roles
+- Users: email/password-authenticated users with `user`/`admin`/`super_admin` roles; institute signups create a pending institute application
 - Institutes: owner-scoped organizations with approval states and subscription entitlements
 - Exams: title, subject, topic, difficulty, duration, question count, publication state, price, and optional institute ownership
 - Questions: exam-scoped MCQ records with answer key and explanations
@@ -14,7 +14,7 @@ This repository is a MERN-based online-test platform starter with a Vite React f
 
 ### Frontend
 - React 19 + Vite + Tailwind client under `client/src`
-- Router-based pages for landing, auth, profiles, exam instructions, results, institute portal, and admin finance/dashboard
+- Router-based pages for landing, auth, learner results, public institute directory, pricing, blog, about, institute portal, and separate admin/finance dashboards
 - Auth context stores JWT in `localStorage` and exposes `isAuthenticated` and `isAdmin`
 - Exam flow supports question navigation, timed exams, review marking, and result summaries
 - Admin import UI expects JSON payloads matching a schema and sends them to `/api/admin/import-json`

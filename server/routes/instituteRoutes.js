@@ -2,6 +2,7 @@ const express = require('express');
 const {
   registerInstitute,
   getMyInstitute,
+  getPopularInstitutes,
   importInstituteExam,
   getInstituteExams,
   updateInstituteExam,
@@ -12,6 +13,7 @@ const approvedInstitute = require('../middleware/approvedInstitute');
 
 const router = express.Router();
 
+router.get('/popular', getPopularInstitutes);
 router.use(protect);
 router.get('/me', getMyInstitute);
 router.post('/register', registerInstitute);

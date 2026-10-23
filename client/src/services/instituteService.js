@@ -5,6 +5,11 @@ const getMyInstitute = async () => {
   return response.data.institute;
 };
 
+const getPopularInstitutes = async () => {
+  const response = await api.get("/institutes/popular");
+  return response.data;
+};
+
 const registerInstitute = async (details) => {
   const response = await api.post("/institutes/register", details);
   return response.data;
@@ -35,6 +40,7 @@ const getResults = async () => {
 
 const instituteService = {
   getMyInstitute,
+  getPopularInstitutes,
   registerInstitute,
   getExams,
   importExamJson,

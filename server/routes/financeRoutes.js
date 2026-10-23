@@ -6,6 +6,7 @@ const {
   requestInstitutePayout,
   getInstituteFinance,
   getSettingsForAdmin,
+  getPublicPlans,
   updateSettings,
   listFinanceRecords,
   verifySubscriptionPayment,
@@ -21,6 +22,7 @@ const superAdminAuth = require('../middleware/superAdminAuth');
 
 const router = express.Router();
 
+router.get('/plans', getPublicPlans);
 router.post('/exams/:id/purchases', protect, createExamPurchase);
 router.patch('/admin/purchases/:id/verify', protect, superAdminAuth, verifyPurchasePayment);
 router.post('/admin/purchases/:id/adjustments', protect, superAdminAuth, adjustPurchase);

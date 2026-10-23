@@ -37,15 +37,8 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
-    return data.user;
-  };
-
-  const loginWithGoogle = async (idToken) => {
-    const { data } = await api.post('/auth/google', { idToken });
+  const register = async (name, email, password, accountDetails = {}) => {
+    const { data } = await api.post('/auth/register', { name, email, password, ...accountDetails });
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data.user;
@@ -64,7 +57,6 @@ export const AuthProvider = ({ children }) => {
     isSuperAdmin: user?.isSuperAdmin === true || user?.role === 'super_admin',
     login,
     register,
-    loginWithGoogle,
     logout,
   };
 

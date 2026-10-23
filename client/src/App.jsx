@@ -12,6 +12,11 @@ import ExamPage from "./pages/ExamPage.jsx";
 import ResultPage from "./pages/ResultPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import InstituteDashboard from "./pages/InstituteDashboard.jsx";
+import UserDashboard from "./pages/UserDashboard.jsx";
+import Institutes from "./pages/Institutes.jsx";
+import Pricing from "./pages/Pricing.jsx";
+import Blog from "./pages/Blog.jsx";
+import About from "./pages/About.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminImport from "./pages/admin/AdminImport.jsx";
@@ -30,6 +35,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/exams" element={<Exams />} />
+          <Route path="/institutes" element={<Institutes />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/about" element={<About />} />
 
           {/* User routes (require authentication) */}
           <Route
@@ -53,6 +62,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ResultPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
               </ProtectedRoute>
             }
           />
@@ -93,7 +110,7 @@ function App() {
           <Route
             path="/admin/institutes"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute superAdminOnly>
                 <InstituteApplications />
               </ProtectedRoute>
             }
@@ -101,7 +118,7 @@ function App() {
           <Route
             path="/admin/finance"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute superAdminOnly>
                 <FinanceDashboard />
               </ProtectedRoute>
             }

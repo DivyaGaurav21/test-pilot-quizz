@@ -4,6 +4,9 @@ const Exam = require('../models/Exam');
 const Question = require('../models/Question')
 const Result = require('../models/Result');
 const Institute = require('../models/Institute');
+const User = require('../models/User');
+const FinancialLedgerEntry = require('../models/FinancialLedgerEntry');
+const MonetizationSettings = require('../models/MonetizationSettings');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -40,11 +43,57 @@ const getAllResults = async (req, res) => {
     const results = await Result.find()
       .populate('userId', 'name email')
       .populate('examId', 'title subject')
-      .sort({ submittedAt: -1 });
+      .sort({ submittedAt: -1 })
+      .limit(100);
 
     return res.status(200).json(results);
   } catch (error) {
     return res.status(500).json({ message: 'Failed to fetch results', error: error.message });
+  }
+};
+
+const getAdminOverview = async (req, res) => {
+  try {
+    const instituteOwnerIds = await Institute.distinct('ownerId');
+    const [studentCount, publishedExamCount, resultCount, entriesByType, settings] = await Promise.all([
+      User.countDocuments({ role: 'user', _id: { $nin: instituteOwnerIds } }),
+      Exam.countDocuments({ isPublished: true }),
+      Result.countDocuments(),
+      FinancialLedgerEntry.aggregate([
+        { $group: { _id: '$type', totalPaise: { $sum: '$amountPaise' } } },
+      ]),
+      MonetizationSettings.findById('platform').select('currency'),
+    ]);
+    const totals = Object.fromEntries(entriesByType.map(({ _id, totalPaise }) => [_id, totalPaise]));
+    const subscriptionRevenuePaise = totals.subscription_payment || 0;
+    const platformCommissionPaise = totals.platform_commission || 0;
+
+    return res.status(200).json({
+      studentCount,
+      publishedExamCount,
+      resultCount,
+      currency: settings?.currency || 'INR',
+      examSalesPaise: totals.purchase || 0,
+      subscriptionRevenuePaise,
+      platformCommissionPaise,
+      platformRevenuePaise: subscriptionRevenuePaise + platformCommissionPaise,
+      instituteRevenuePaise: totals.institute_share || 0,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch admin overview', error: error.message });
+  }
+};
+
+const getAdminStudents = async (req, res) => {
+  try {
+    const instituteOwnerIds = await Institute.distinct('ownerId');
+    const students = await User.find({ role: 'user', _id: { $nin: instituteOwnerIds } })
+      .select('name email createdAt')
+      .sort({ createdAt: -1 })
+      .limit(100);
+    return res.status(200).json(students);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch student details', error: error.message });
   }
 };
 
@@ -191,6 +240,8 @@ const deleteExam = async (req, res) => {
 module.exports = {
   importJson,
   getAllResults,
+  getAdminOverview,
+  getAdminStudents,
   getInstituteApplications,
   reviewInstituteApplication,
   deleteExam,

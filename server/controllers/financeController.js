@@ -195,6 +195,20 @@ const getSettingsForAdmin = async (req, res) => {
   }
 };
 
+const getPublicPlans = async (req, res) => {
+  try {
+    const settings = await getSettings();
+    return res.status(200).json({
+      currency: settings.currency,
+      freePublicationLimit: settings.freePublicationLimit,
+      monthlyPlan: settings.monthlyPlan,
+      yearlyPlan: settings.yearlyPlan,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch plans', error: error.message });
+  }
+};
+
 const updateSettings = async (req, res) => {
   const body = req.body || {};
   const {
@@ -463,6 +477,7 @@ module.exports = {
   requestInstitutePayout,
   getInstituteFinance,
   getSettingsForAdmin,
+  getPublicPlans,
   updateSettings,
   listFinanceRecords,
   verifySubscriptionPayment,
