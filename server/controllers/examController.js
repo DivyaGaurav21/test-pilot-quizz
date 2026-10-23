@@ -83,11 +83,28 @@ const submitExam = async (req, res) => {
       return res.status(400).json({ message: 'timeTaken must be a non-negative number' });
     }
 
-    // Fetch full questions (including correctAnswer) directly from the DB —
+    // Fetch full questions (including correctAnswer) directly from the DB ?
     // never trust any answer key or score sent by the client.
     const questions = await Question.find({ examId: id });
+    const validQuestionIds = new Set(questions.map((question) => question._id.toString()));
+    const sanitizedAnswers = {};
 
-    const resultData = calculateResult(questions, answers || {}, timeTaken);
+    if (answers && typeof answers === 'object' && !Array.isArray(answers)) {
+      Object.entries(answers).forEach(([questionId, selectedOption]) => {
+        if (!validQuestionIds.has(questionId)) {
+          return;
+        }
+
+        const question = questions.find((entry) => entry._id.toString() === questionId);
+        if (!question || !Array.isArray(question.options) || !question.options.includes(String(selectedOption))) {
+          return;
+        }
+
+        sanitizedAnswers[questionId] = String(selectedOption);
+      });
+    }
+
+    const resultData = calculateResult(questions, sanitizedAnswers, timeTaken);
 
     const result = await Result.create({
       userId: req.user._id,

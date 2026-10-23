@@ -3,7 +3,9 @@ const adminAuth = (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized' });
   }
 
-  if (req.user.email !== process.env.ADMIN_EMAIL) {
+  const isAdmin = req.user.role === 'admin' || req.user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase();
+
+  if (!isAdmin) {
     return res.status(403).json({ message: 'Forbidden: admin access required' });
   }
 
