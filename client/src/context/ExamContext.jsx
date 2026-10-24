@@ -4,7 +4,7 @@ import examService from "../services/examService";
 const ExamContext = createContext(null);
 
 export const ExamProvider = ({ children }) => {
-  const [exam, setExam] = useState(null);       // metadata
+  const [exam, setExam] = useState(null); // metadata
   const [questions, setQuestions] = useState([]); // question list
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,7 +57,15 @@ export const ExamProvider = ({ children }) => {
 
   return (
     <ExamContext.Provider
-      value={{ exam, questions, loading, error, fetchExam, startExam, submitExam }}
+      value={{
+        exam,
+        questions,
+        loading,
+        error,
+        fetchExam,
+        startExam,
+        submitExam,
+      }}
     >
       {children}
     </ExamContext.Provider>

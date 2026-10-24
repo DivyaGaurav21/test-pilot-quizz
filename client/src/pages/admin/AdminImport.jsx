@@ -16,9 +16,7 @@ const AdminImport = () => {
             ← Back to Dashboard
           </Link>
 
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">
-            Import Exam
-          </h1>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">Import Exam</h1>
           <p className="mt-1 text-sm text-gray-500">
             Paste valid exam JSON to create an exam and its questions.
           </p>
@@ -32,9 +30,7 @@ const AdminImport = () => {
 
         <JsonQuestionImporter
           onSuccess={(data) => {
-            setSuccessMessage(
-              data?.message || "Exam imported successfully."
-            );
+            setSuccessMessage(data?.message || "Exam imported successfully.");
           }}
         />
       </div>

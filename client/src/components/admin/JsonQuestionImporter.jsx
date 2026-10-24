@@ -5,6 +5,7 @@ const SAMPLE_JSON = {
   exam: "SSC CGL",
   subject: "Quantitative Aptitude",
   duration: 60,
+  pricePaise: 0,
   topic: "Percentage",
   difficulty: "Easy",
   questions: [
@@ -43,6 +44,17 @@ const validateExamData = (data) => {
     data.duration <= 0
   ) {
     errors.push("duration must be a positive number.");
+  }
+
+  if (
+    data.pricePaise !== undefined &&
+    (!Number.isSafeInteger(data.pricePaise) || data.pricePaise < 0)
+  ) {
+    errors.push("pricePaise must be a non-negative integer.");
+  }
+
+  if (data.isPublished !== undefined && typeof data.isPublished !== "boolean") {
+    errors.push("isPublished must be a boolean when provided.");
   }
 
   if (!Array.isArray(data.questions) || data.questions.length === 0) {
@@ -86,7 +98,7 @@ const validateExamData = (data) => {
   return errors;
 };
 
-const JsonQuestionImporter = ({ onSuccess }) => {
+const JsonQuestionImporter = ({ onSuccess, importExam = adminService.importExamJson }) => {
   const [jsonText, setJsonText] = useState(
     JSON.stringify(SAMPLE_JSON, null, 2)
   );
@@ -136,7 +148,7 @@ const JsonQuestionImporter = ({ onSuccess }) => {
     try {
       setLoading(true);
 
-      const response = await adminService.importExamJson(data);
+      const response = await importExam(data);
 
       setMessage(response?.message || "Exam imported successfully.");
       onSuccess?.(response);
@@ -169,7 +181,8 @@ const JsonQuestionImporter = ({ onSuccess }) => {
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           Paste the complete exam JSON. The backend will validate it again
-          before saving.
+          before saving. For institute exams, set pricePaise to the price in paise
+          (0 for free); institute imports remain drafts until you publish them.
         </p>
       </div>
 

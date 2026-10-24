@@ -34,14 +34,17 @@ const Exams = () => {
         exam.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         exam.subject?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesSubject = subjectFilter === "all" || exam.subject === subjectFilter;
-      const matchesDifficulty = difficultyFilter === "all" || exam.difficulty === difficultyFilter;
+      const matchesSubject =
+        subjectFilter === "all" || exam.subject === subjectFilter;
+      const matchesDifficulty =
+        difficultyFilter === "all" || exam.difficulty === difficultyFilter;
 
       return matchesSearch && matchesSubject && matchesDifficulty;
     });
   }, [exams, searchTerm, subjectFilter, difficultyFilter]);
 
-  const hasActiveFilters = searchTerm || subjectFilter !== "all" || difficultyFilter !== "all";
+  const hasActiveFilters =
+    searchTerm || subjectFilter !== "all" || difficultyFilter !== "all";
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -73,7 +76,11 @@ const Exams = () => {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 <input
                   type="text"
@@ -120,7 +127,10 @@ const Exams = () => {
             {hasActiveFilters && (
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-xs text-gray-500">
-                  {t("exams.resultsCount").replace("{{count}}", filteredExams.length)}
+                  {t("exams.resultsCount").replace(
+                    "{{count}}",
+                    filteredExams.length,
+                  )}
                 </p>
                 <button
                   onClick={clearFilters}
@@ -145,33 +155,64 @@ const Exams = () => {
         {!loading && !error && exams.length === 0 && (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
-              <svg className="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="h-7 w-7 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
             </div>
-            <h2 className="font-semibold text-gray-900">{t("exams.noExamsTitle")}</h2>
-            <p className="mt-1 text-sm text-gray-500">{t("exams.noExamsSubtitle")}</p>
+            <h2 className="font-semibold text-gray-900">
+              {t("exams.noExamsTitle")}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {t("exams.noExamsSubtitle")}
+            </p>
           </div>
         )}
 
         {/* Filtered but no matches */}
-        {!loading && !error && exams.length > 0 && filteredExams.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
-              <svg className="h-7 w-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+        {!loading &&
+          !error &&
+          exams.length > 0 &&
+          filteredExams.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                <svg
+                  className="h-7 w-7 text-amber-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <h2 className="font-semibold text-gray-900">
+                {t("exams.noResultsTitle")}
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                {t("exams.noResultsSubtitle")}
+              </p>
+              <button
+                onClick={clearFilters}
+                className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                {t("exams.clearFilters")}
+              </button>
             </div>
-            <h2 className="font-semibold text-gray-900">{t("exams.noResultsTitle")}</h2>
-            <p className="mt-1 text-sm text-gray-500">{t("exams.noResultsSubtitle")}</p>
-            <button
-              onClick={clearFilters}
-              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              {t("exams.clearFilters")}
-            </button>
-          </div>
-        )}
+          )}
 
         {/* Exam grid */}
         {!loading && !error && filteredExams.length > 0 && (

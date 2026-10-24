@@ -21,8 +21,8 @@ import { Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth.js';
 import Loading from './Loading.jsx';
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+const ProtectedRoute = ({ children, adminOnly = false, superAdminOnly = false }) => {
+  const { isAuthenticated, isAdmin, isSuperAdmin, loading } = useAuth();
 
   if (loading) {
     return <Loading />;
@@ -34,6 +34,10 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (adminOnly && !isAdmin) {
     return <Navigate to="/exams" replace />;
+  }
+
+  if (superAdminOnly && !isSuperAdmin) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

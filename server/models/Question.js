@@ -1,14 +1,19 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema({
   examId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Exam',
+    ref: "Exam",
     required: true,
+  },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Institute",
+    default: null,
   },
   question: {
     type: String,
-    required: [true, 'Question text is required'],
+    required: [true, "Question text is required"],
     trim: true,
   },
   options: {
@@ -18,12 +23,12 @@ const questionSchema = new mongoose.Schema({
       validator: function (options) {
         return options.length === 4;
       },
-      message: 'A question must have exactly 4 options',
+      message: "A question must have exactly 4 options",
     },
   },
   correctAnswer: {
     type: String,
-    required: [true, 'Correct answer is required'],
+    required: [true, "Correct answer is required"],
   },
   explanation: {
     type: String,
@@ -35,4 +40,4 @@ const questionSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Question', questionSchema);
+module.exports = mongoose.model("Question", questionSchema);

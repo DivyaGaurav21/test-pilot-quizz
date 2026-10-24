@@ -1,4 +1,4 @@
-const PDFDocument = require('pdfkit');
+const PDFDocument = require("pdfkit");
 
 // Generates a result PDF and streams it directly to the response.
 // result: a Result document, with examId populated (title, subject, etc.)
@@ -6,18 +6,15 @@ const PDFDocument = require('pdfkit');
 const generateResultPdf = (result, user, res) => {
   const doc = new PDFDocument({ margin: 50 });
 
-  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
-    'Content-Disposition',
-    `attachment; filename=result-${result._id}.pdf`
+    "Content-Disposition",
+    `attachment; filename=result-${result._id}.pdf`,
   );
 
   doc.pipe(res);
 
-  doc
-    .fontSize(20)
-    .text('Exam Result', { align: 'center' })
-    .moveDown();
+  doc.fontSize(20).text("Exam Result", { align: "center" }).moveDown();
 
   doc
     .fontSize(12)
@@ -29,7 +26,7 @@ const generateResultPdf = (result, user, res) => {
 
   doc
     .fontSize(14)
-    .text('Score Summary', { underline: true })
+    .text("Score Summary", { underline: true })
     .fontSize(12)
     .text(`Score: ${result.score} / ${result.totalMarks}`)
     .text(`Percentage: ${result.percentage}%`)

@@ -8,7 +8,7 @@ const Profile = () => {
   const { t } = useLanguage();
 
   const initial = user?.name?.charAt(0)?.toUpperCase() || "U";
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString(undefined, {
@@ -31,8 +31,6 @@ const Profile = () => {
           <div className="px-6 pb-8 sm:px-8">
             {/* Avatar */}
             <div className="-mt-12 flex items-end justify-between">
-
-
               {isAdmin && (
                 <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
                   <svg
@@ -55,6 +53,13 @@ const Profile = () => {
                 {t("profile.subtitle")}
               </p>
             </div>
+
+            <Link
+              to="/institute"
+              className="mt-5 inline-flex rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+            >
+              Institute Portal
+            </Link>
 
             {/* Info list */}
             <div className="mt-6 divide-y divide-gray-100 rounded-xl border border-gray-100 bg-gray-50/50">

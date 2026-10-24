@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
-import GoogleLoginButton from "../components/auth/GoogleLoginButton.jsx";
 import ErrorMessage from "../components/common/ErrorMessage.jsx";
 
 const Login = () => {
@@ -26,8 +25,10 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await login(formData.email, formData.password);
-      navigate("/exams");
+      const user = await login(formData.email, formData.password);
+      navigate(
+        ["admin", "super_admin"].includes(user.role) ? "/admin" : "/dashboard",
+      );
     } catch (err) {
       setError(err.response?.data?.message || t("auth.loginFailed"));
     } finally {
@@ -183,23 +184,22 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs font-medium text-gray-400">
-            {t("auth.or")}
-          </span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-
-        <GoogleLoginButton />
-
         <p className="mt-6 text-center text-sm text-gray-600">
-          {t("auth.noAccount")}{" "}
+          {t("auth.newToTestPilot")}
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-600">
           <Link
             to="/register"
             className="font-medium text-blue-600 hover:underline"
           >
-            {t("auth.register")}
+            {t("auth.createStudentAccount")}
+          </Link>{" "}
+          {t("auth.or")}{" "}
+          <Link
+            to="/register?accountType=institute"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            {t("auth.registerInstitute")}
           </Link>
         </p>
       </div>

@@ -32,7 +32,7 @@ const ExamPage = () => {
     setMarkedForReview((current) =>
       current.includes(currentQuestion._id)
         ? current.filter((questionId) => questionId !== currentQuestion._id)
-        : [...current, currentQuestion._id]
+        : [...current, currentQuestion._id],
     );
   };
 
@@ -40,7 +40,7 @@ const ExamPage = () => {
     if (submitting) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to submit the exam?"
+      "Are you sure you want to submit the exam?",
     );
 
     if (!confirmed) return;
@@ -101,10 +101,7 @@ const ExamPage = () => {
             </p>
           </div>
 
-          <ExamTimer
-            durationMinutes={exam.duration}
-            onTimeUp={handleSubmit}
-          />
+          <ExamTimer durationMinutes={exam.duration} onTimeUp={handleSubmit} />
         </div>
 
         {error && (
@@ -122,36 +119,35 @@ const ExamPage = () => {
               onAnswerChange={handleAnswerChange}
             />
 
-              
-              <div className="flex gap-3 mt-5 flex-col md:flex-row">
+            <div className="flex gap-3 mt-5 flex-col md:flex-row">
+              <button
+                type="button"
+                disabled={currentIndex === 0}
+                onClick={() => setCurrentIndex((index) => index - 1)}
+                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+
+              {!isLastQuestion ? (
                 <button
                   type="button"
-                  disabled={currentIndex === 0}
-                  onClick={() => setCurrentIndex((index) => index - 1)}
-                  className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => setCurrentIndex((index) => index + 1)}
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                 >
-                  Previous
+                  Next
                 </button>
-
-                {!isLastQuestion ? (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentIndex((index) => index + 1)}
-                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {submitting ? "Submitting..." : "Submit Exam"}
-                  </button>
-                )}
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Submitting..." : "Submit Exam"}
+                </button>
+              )}
+            </div>
           </section>
 
           <aside>

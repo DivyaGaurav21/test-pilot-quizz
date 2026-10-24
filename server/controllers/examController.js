@@ -1,18 +1,43 @@
-const mongoose = require('mongoose');
-const Exam = require('../models/Exam');
-const Question = require('../models/Question');
-const Result = require('../models/Result');
-const calculateResult = require('../utils/calculateResult');
+const mongoose = require("mongoose");
+const Exam = require("../models/Exam");
+const Question = require("../models/Question");
+const Result = require("../models/Result");
+const ExamPurchase = require("../models/ExamPurchase");
+const { getSettings } = require("../services/monetizationService");
+const calculateResult = require("../utils/calculateResult");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const hasExamAccess = async (exam, userId) => {
+  if (exam.pricePaise <= 0) return true;
+  return Boolean(
+    await ExamPurchase.exists({
+      examId: exam._id,
+      buyerId: userId,
+      status: "verified",
+    }),
+  );
+};
 
 // @route GET /api/exams
 const getExams = async (req, res) => {
   try {
-    const exams = await Exam.find({ isPublished: true }).sort({ createdAt: -1 });
-    return res.status(200).json(exams);
+    const [exams, settings] = await Promise.all([
+      Exam.find({ isPublished: true }).sort({ createdAt: -1 }),
+      getSettings(),
+    ]);
+    return res
+      .status(200)
+      .json(
+        exams.map((exam) => ({
+          ...exam.toObject(),
+          priceCurrency: settings.currency,
+        })),
+      );
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch exams', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch exams", error: error.message });
   }
 };
 
@@ -22,18 +47,23 @@ const getExamById = async (req, res) => {
     const { id } = req.params;
 
     if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid exam id' });
+      return res.status(400).json({ message: "Invalid exam id" });
     }
 
     const exam = await Exam.findOne({ _id: id, isPublished: true });
 
     if (!exam) {
-      return res.status(404).json({ message: 'Exam not found' });
+      return res.status(404).json({ message: "Exam not found" });
     }
 
-    return res.status(200).json(exam);
+    const settings = await getSettings();
+    return res
+      .status(200)
+      .json({ ...exam.toObject(), priceCurrency: settings.currency });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch exam', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch exam", error: error.message });
   }
 };
 
@@ -45,20 +75,37 @@ const startExam = async (req, res) => {
     const { id } = req.params;
 
     if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid exam id' });
+      return res.status(400).json({ message: "Invalid exam id" });
     }
 
     const exam = await Exam.findOne({ _id: id, isPublished: true });
 
     if (!exam) {
-      return res.status(404).json({ message: 'Exam not found' });
+      return res.status(404).json({ message: "Exam not found" });
     }
 
-    const questions = await Question.find({ examId: id }).select('-correctAnswer -explanation');
+    if (!(await hasExamAccess(exam, req.user._id))) {
+      return res
+        .status(402)
+        .json({
+          message: "Verified purchase required to start this exam",
+          pricePaise: exam.pricePaise,
+        });
+    }
 
-    return res.status(200).json({ exam, questions });
+    const questions = await Question.find({ examId: id }).select(
+      "-correctAnswer -explanation",
+    );
+
+    const settings = await getSettings();
+    return res.status(200).json({
+      exam: { ...exam.toObject(), priceCurrency: settings.currency },
+      questions,
+    });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to start exam', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to start exam", error: error.message });
   }
 };
 
@@ -70,34 +117,73 @@ const submitExam = async (req, res) => {
     const { answers, timeTaken } = req.body;
 
     if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid exam id' });
+      return res.status(400).json({ message: "Invalid exam id" });
     }
 
     const exam = await Exam.findOne({ _id: id, isPublished: true });
 
     if (!exam) {
-      return res.status(404).json({ message: 'Exam not found' });
+      return res.status(404).json({ message: "Exam not found" });
     }
 
-    if (typeof timeTaken !== 'number' || timeTaken < 0) {
-      return res.status(400).json({ message: 'timeTaken must be a non-negative number' });
+    if (!(await hasExamAccess(exam, req.user._id))) {
+      return res
+        .status(402)
+        .json({
+          message: "Verified purchase required to submit this exam",
+          pricePaise: exam.pricePaise,
+        });
     }
 
-    // Fetch full questions (including correctAnswer) directly from the DB —
+    if (typeof timeTaken !== "number" || timeTaken < 0) {
+      return res
+        .status(400)
+        .json({ message: "timeTaken must be a non-negative number" });
+    }
+
+    // Fetch full questions (including correctAnswer) directly from the DB ?
     // never trust any answer key or score sent by the client.
     const questions = await Question.find({ examId: id });
+    const validQuestionIds = new Set(
+      questions.map((question) => question._id.toString()),
+    );
+    const sanitizedAnswers = {};
 
-    const resultData = calculateResult(questions, answers || {}, timeTaken);
+    if (answers && typeof answers === "object" && !Array.isArray(answers)) {
+      Object.entries(answers).forEach(([questionId, selectedOption]) => {
+        if (!validQuestionIds.has(questionId)) {
+          return;
+        }
+
+        const question = questions.find(
+          (entry) => entry._id.toString() === questionId,
+        );
+        if (
+          !question ||
+          !Array.isArray(question.options) ||
+          !question.options.includes(String(selectedOption))
+        ) {
+          return;
+        }
+
+        sanitizedAnswers[questionId] = String(selectedOption);
+      });
+    }
+
+    const resultData = calculateResult(questions, sanitizedAnswers, timeTaken);
 
     const result = await Result.create({
       userId: req.user._id,
       examId: id,
+      instituteId: exam.instituteId || null,
       ...resultData,
     });
 
     return res.status(201).json(result);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to submit exam', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to submit exam", error: error.message });
   }
 };
 

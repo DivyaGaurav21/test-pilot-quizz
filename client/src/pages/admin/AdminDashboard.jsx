@@ -5,12 +5,16 @@ import useExam from "../../hooks/useExam";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import Loading from "../../components/common/Loading";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import useAuth from "../../hooks/useAuth";
 
 const AdminDashboard = () => {
+  const { isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Results-related state (from commented feature)
   const [results, setResults] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [overview, setOverview] = useState(null);
   const [resultsLoading, setResultsLoading] = useState(true);
   const [resultsError, setResultsError] = useState("");
 
@@ -31,8 +35,14 @@ const AdminDashboard = () => {
       setResultsLoading(true);
       setResultsError("");
 
-      const data = await adminService.getAdminResults();
+      const [data, summary, studentData] = await Promise.all([
+        adminService.getAdminResults(),
+        adminService.getAdminOverview(),
+        adminService.getAdminStudents(),
+      ]);
       setResults(data || []);
+      setOverview(summary);
+      setStudents(studentData || []);
     } catch (err) {
       setResultsError(
         err.response?.data?.message || "Unable to load admin dashboard.",
@@ -41,6 +51,13 @@ const AdminDashboard = () => {
       setResultsLoading(false);
     }
   };
+
+  const formatRevenue = (amountPaise) =>
+    new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: overview?.currency || "INR",
+      maximumFractionDigits: 2,
+    }).format((amountPaise || 0) / 100);
 
   useEffect(() => {
     loadResults();
@@ -100,6 +117,22 @@ const AdminDashboard = () => {
             </svg>
             Import Exam JSON
           </Link>
+          {isSuperAdmin && (
+            <>
+              <Link
+                to="/admin/institutes"
+                className="inline-flex w-fit items-center rounded-lg border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+              >
+                Review Institutes
+              </Link>
+              <Link
+                to="/admin/finance"
+                className="inline-flex w-fit items-center rounded-lg border border-green-200 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50"
+              >
+                Finance & Plans
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Tabs */}
@@ -134,7 +167,7 @@ const AdminDashboard = () => {
             ) : (
               <>
                 {/* Stat cards */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
@@ -152,10 +185,10 @@ const AdminDashboard = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-500">Submitted Results</p>
+                      <p className="text-sm text-gray-500">Students</p>
                     </div>
                     <p className="mt-3 text-3xl font-bold text-gray-900">
-                      {results.length}
+                      {overview?.studentCount ?? 0}
                     </p>
                   </div>
 
@@ -176,10 +209,10 @@ const AdminDashboard = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-500">Total Exams</p>
+                      <p className="text-sm text-gray-500">Published tests</p>
                     </div>
                     <p className="mt-3 text-3xl font-bold text-gray-900">
-                      {exams.length}
+                      {overview?.publishedExamCount ?? exams.length}
                     </p>
                   </div>
 
@@ -200,13 +233,117 @@ const AdminDashboard = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-500">Admin Access</p>
+                      <p className="text-sm text-gray-500">Test attempts</p>
                     </div>
-                    <p className="mt-3 text-lg font-semibold text-green-600">
-                      Authorized
+                    <p className="mt-3 text-3xl font-bold text-gray-900">
+                      {overview?.resultCount ?? results.length}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                        <span className="text-lg font-bold" aria-hidden="true">
+                          ₹
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Recorded platform revenue
+                      </p>
+                    </div>
+                    <p className="mt-3 text-2xl font-bold text-gray-900">
+                      {formatRevenue(overview?.platformRevenuePaise)}
                     </p>
                   </div>
                 </div>
+
+                <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-semibold text-gray-900">
+                        Revenue details
+                      </h2>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Totals are based on recorded finance ledger entries.
+                      </p>
+                    </div>
+                    {isSuperAdmin && (
+                      <Link
+                        to="/admin/finance"
+                        className="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+                      >
+                        Open finance controls →
+                      </Link>
+                    )}
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ["Exam sales recorded", overview?.examSalesPaise],
+                      [
+                        "Subscription revenue",
+                        overview?.subscriptionRevenuePaise,
+                      ],
+                      [
+                        "Institute share accrued",
+                        overview?.instituteRevenuePaise,
+                      ],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl bg-slate-50 p-4">
+                        <p className="text-xs font-medium text-slate-500">
+                          {label}
+                        </p>
+                        <p className="mt-2 text-lg font-bold text-slate-900">
+                          {formatRevenue(value)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                  <div className="border-b border-gray-200 px-5 py-4">
+                    <h2 className="font-semibold text-gray-900">
+                      Student details
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Most recently created student accounts, up to 100.
+                    </p>
+                  </div>
+                  {students.length === 0 ? (
+                    <p className="px-5 py-8 text-sm text-gray-500">
+                      No student accounts to show yet.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-left text-sm">
+                        <thead className="bg-gray-50 text-gray-600">
+                          <tr>
+                            <th className="px-5 py-3 font-medium">Student</th>
+                            <th className="px-5 py-3 font-medium">Email</th>
+                            <th className="px-5 py-3 font-medium">Joined</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {students.map((student) => (
+                            <tr key={student._id}>
+                              <td className="px-5 py-3 font-medium text-gray-800">
+                                {student.name}
+                              </td>
+                              <td className="px-5 py-3 text-gray-600">
+                                {student.email}
+                              </td>
+                              <td className="px-5 py-3 text-gray-500">
+                                {new Date(
+                                  student.createdAt,
+                                ).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
 
                 {/* Recent results table */}
                 <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">

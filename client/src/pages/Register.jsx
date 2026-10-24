@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
-import GoogleLoginButton from '../components/auth/GoogleLoginButton.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
 
 const getPasswordStrength = (password) => {
@@ -19,8 +18,22 @@ const Register = () => {
   const { register } = useAuth();
   const { t, language, changeLanguage } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    accountType: searchParams.get('accountType') === 'institute' ? 'institute' : 'user',
+    instituteName: '',
+  });
+  const accountTypeParam = searchParams.get('accountType');
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      accountType: accountTypeParam === 'institute' ? 'institute' : 'user',
+    }));
+  }, [accountTypeParam]);
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
@@ -56,8 +69,15 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
-      await register(formData.name, formData.email, formData.password);
-      navigate('/exams');
+      const user = await register(formData.name, formData.email, formData.password, {
+        accountType: formData.accountType,
+        ...(formData.accountType === 'institute' ? {
+          instituteName: formData.instituteName,
+        } : {}),
+      });
+      navigate(user.role === 'super_admin' || user.role === 'admin'
+        ? '/admin'
+        : formData.accountType === 'institute' ? '/institute' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || t('auth.registrationFailed'));
     } finally {
@@ -81,6 +101,44 @@ const Register = () => {
         {error && <ErrorMessage message={error} />}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <div>
+            <label htmlFor="accountType" className="mb-1 block text-sm font-medium text-gray-700">
+              Sign up as
+            </label>
+            <select
+              id="accountType"
+              name="accountType"
+              value={formData.accountType}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="user">Student / user</option>
+              <option value="institute">Institute</option>
+            </select>
+          </div>
+
+          {formData.accountType === 'institute' && (
+            <>
+              <div>
+                <label htmlFor="instituteName" className="mb-1 block text-sm font-medium text-gray-700">
+                  Institute name
+                </label>
+                <input
+                  id="instituteName"
+                  name="instituteName"
+                  required
+                  value={formData.instituteName}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Your school or coaching institute"
+                />
+              </div>
+              <p className="text-xs leading-5 text-slate-500">
+                Institute access starts after a superadmin reviews your application.
+              </p>
+            </>
+          )}
+
           <div>
             <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
               {t('auth.fullName')}
@@ -197,20 +255,20 @@ const Register = () => {
           </button>
         </form>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs font-medium text-gray-400">{t('auth.or')}</span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-
-        <GoogleLoginButton />
-
         <p className="mt-6 text-center text-sm text-gray-600">
           {t('auth.alreadyHaveAccount')}{' '}
           <Link to="/login" className="font-medium text-blue-600 hover:underline">
             {t('auth.signIn')}
           </Link>
         </p>
+        {formData.accountType !== 'institute' && (
+          <p className="mt-3 text-center text-sm text-gray-600">
+            {t('auth.registeringInstitute')}{' '}
+            <Link to="/register?accountType=institute" className="font-medium text-blue-600 hover:underline">
+              {t('auth.createInstituteAccount')}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

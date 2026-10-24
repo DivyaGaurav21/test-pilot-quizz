@@ -1,5 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
-import api from '../services/api.js';
+import { createContext, useState, useEffect } from "react";
+import api from "../services/api.js";
 
 export const AuthContext = createContext(null);
 
@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
 
       if (!token) {
         setLoading(false);
@@ -17,10 +17,10 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const { data } = await api.get('/auth/me');
+        const { data } = await api.get("/auth/me");
         setUser(data);
       } catch (error) {
-        localStorage.removeItem('token');
+        localStorage.removeItem("token");
         setUser(null);
       } finally {
         setLoading(false);
@@ -31,28 +31,26 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
+    const { data } = await api.post("/auth/login", { email, password });
+    localStorage.setItem("token", data.token);
     setUser(data.user);
     return data.user;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
-    return data.user;
-  };
-
-  const loginWithGoogle = async (idToken) => {
-    const { data } = await api.post('/auth/google', { idToken });
-    localStorage.setItem('token', data.token);
+  const register = async (name, email, password, accountDetails = {}) => {
+    const { data } = await api.post("/auth/register", {
+      name,
+      email,
+      password,
+      ...accountDetails,
+    });
+    localStorage.setItem("token", data.token);
     setUser(data.user);
     return data.user;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
   };
 
@@ -60,10 +58,10 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
+    isAdmin: user?.role === "admin" || user?.role === "super_admin",
+    isSuperAdmin: user?.isSuperAdmin === true || user?.role === "super_admin",
     login,
     register,
-    loginWithGoogle,
     logout,
   };
 

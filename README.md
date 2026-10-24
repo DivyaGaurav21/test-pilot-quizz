@@ -36,12 +36,6 @@ npm run dev
 Frontend: http://localhost:5173  
 Backend: http://localhost:5000
 
-## Google Login
+Authentication currently uses email and password. Institute signups submit an application for superadmin review; administrator roles are provisioned by an operator and cannot be selected during public registration.
 
-Set your Google OAuth Client ID in:
-
-```env
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-```
-
-and configure the same client ID on the backend.
+The landing page highlights six recent published tests and the six most-used approved institutes. Signed-in learners can review recent results from their dashboard. Administrators have separate student, test-attempt, and recorded-revenue views.

@@ -1,21 +1,3 @@
-// import mongoose from 'mongoose';
-
-// const examSchema = new mongoose.Schema(
-//   {
-//     name: { type: String, required: true, trim: true },
-//     description: { type: String, default: '' },
-//     subject: String,
-//     topic: String,
-//     difficulty: String,
-//     durationMinutes: { type: Number, required: true, default: 30 },
-//     totalQuestions: { type: Number, default: 0 },
-//     isPublished: { type: Boolean, default: true },
-//   },
-//   { timestamps: true }
-// );
-
-// export default mongoose.model('Exam', examSchema);
-
 const mongoose = require('mongoose');
 
 const examSchema = new mongoose.Schema({
@@ -50,6 +32,20 @@ const examSchema = new mongoose.Schema({
   isPublished: {
     type: Boolean,
     default: true,
+  },
+  instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Institute',
+    default: null,
+  },
+  pricePaise: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  archivedAt: {
+    type: Date,
+    default: null,
   },
 }, {
   timestamps: { createdAt: true, updatedAt: false },

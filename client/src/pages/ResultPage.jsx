@@ -19,9 +19,7 @@ const ResultPage = () => {
       const response = await api.get(`/results/${id}`);
       setResult(response.data.result || response.data.data || response.data);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to load result."
-      );
+      setError(err.response?.data?.message || "Unable to load result.");
     } finally {
       setLoading(false);
     }
@@ -48,9 +46,7 @@ const ResultPage = () => {
 
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to download result PDF."
-      );
+      setError(err.response?.data?.message || "Unable to download result PDF.");
     }
   };
 
@@ -99,15 +95,11 @@ const ResultPage = () => {
                   {result.examId?.title || result.exam?.title || "-"}
                 </p>
                 <p>
-                  <span className="font-medium text-gray-800">
-                    Time Taken:
-                  </span>{" "}
+                  <span className="font-medium text-gray-800">Time Taken:</span>{" "}
                   {result.timeTaken ?? 0} seconds
                 </p>
                 <p>
-                  <span className="font-medium text-gray-800">
-                    Submitted:
-                  </span>{" "}
+                  <span className="font-medium text-gray-800">Submitted:</span>{" "}
                   {result.submittedAt
                     ? new Date(result.submittedAt).toLocaleString()
                     : "-"}

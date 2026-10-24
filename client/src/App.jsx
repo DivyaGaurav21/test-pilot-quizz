@@ -11,9 +11,17 @@ import ExamInstructions from "./pages/ExamInstructions.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import ResultPage from "./pages/ResultPage.jsx";
 import Profile from "./pages/Profile.jsx";
+import InstituteDashboard from "./pages/InstituteDashboard.jsx";
+import UserDashboard from "./pages/UserDashboard.jsx";
+import Institutes from "./pages/Institutes.jsx";
+import Pricing from "./pages/Pricing.jsx";
+import Blog from "./pages/Blog.jsx";
+import About from "./pages/About.jsx";
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminImport from "./pages/admin/AdminImport.jsx";
+import InstituteApplications from "./pages/admin/InstituteApplications.jsx";
+import FinanceDashboard from "./pages/admin/FinanceDashboard.jsx";
 
 function App() {
   return (
@@ -27,6 +35,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/exams" element={<Exams />} />
+          <Route path="/institutes" element={<Institutes />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/about" element={<About />} />
 
           {/* User routes (require authentication) */}
           <Route
@@ -54,10 +66,26 @@ function App() {
             }
           />
           <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/institute"
+            element={
+              <ProtectedRoute>
+                <InstituteDashboard />
               </ProtectedRoute>
             }
           />
@@ -76,6 +104,22 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminImport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/institutes"
+            element={
+              <ProtectedRoute superAdminOnly>
+                <InstituteApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/finance"
+            element={
+              <ProtectedRoute superAdminOnly>
+                <FinanceDashboard />
               </ProtectedRoute>
             }
           />

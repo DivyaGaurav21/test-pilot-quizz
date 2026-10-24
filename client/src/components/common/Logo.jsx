@@ -1,9 +1,9 @@
-import React from "react";
-import logo from "../../utils/logo.png";
-
 const Logo = () => {
   return (
-    <img src={logo} alt="Test Hub" className="h-12 max-w-32 object-contain" />
+    <span className="inline-flex items-center gap-1.5 text-xl font-extrabold tracking-tight" aria-label="Test Pilot">
+      <span>Test</span>
+      <span className="text-cyan-500">Pilot</span>
+    </span>
   );
 };
 
