@@ -66,7 +66,6 @@ test('institute registration creates a user and a pending application atomically
         password: 'secure-password',
         accountType: 'institute',
         instituteName: 'Learning Center',
-        contactEmail: 'hello@learning.example',
       },
     }, response);
   } finally {
@@ -81,7 +80,53 @@ test('institute registration creates a user and a pending application atomically
   assert.equal(createdUser.role, 'user');
   assert.equal(createdUser.email, 'owner@example.com');
   assert.equal(createdInstitute.ownerId, userId);
+  assert.equal(createdInstitute.contactEmail, 'owner@example.com');
   assert.equal(createdInstitute.status, 'pending');
   assert.equal(response.body.user.role, 'user');
   assert.equal(response.body.institute.name, 'Learning Center');
+});
+
+test('registration assigns superadmin only to the configured email', async (t) => {
+  const session = {
+    async withTransaction(callback) {
+      await callback();
+    },
+    async endSession() {},
+  };
+  t.mock.method(mongoose, 'startSession', async () => session);
+  t.mock.method(User, 'findOne', () => ({ session: async () => null }));
+  t.mock.method(User, 'create', async ([userData]) => [
+    { ...userData, _id: new mongoose.Types.ObjectId() },
+  ]);
+
+  const originalJwtSecret = process.env.JWT_SECRET;
+  const originalSuperAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  process.env.JWT_SECRET = 'auth-registration-test-secret';
+  process.env.SUPER_ADMIN_EMAIL = 'owner@example.com';
+  const response = createResponse();
+  try {
+    await register({
+      body: {
+        name: 'Application Owner',
+        email: ' OWNER@EXAMPLE.COM ',
+        password: 'secure-password',
+      },
+    }, response);
+  } finally {
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
+    if (originalSuperAdminEmail === undefined) {
+      delete process.env.SUPER_ADMIN_EMAIL;
+    } else {
+      process.env.SUPER_ADMIN_EMAIL = originalSuperAdminEmail;
+    }
+  }
+
+  assert.equal(response.statusCode, 201);
+  assert.equal(response.body.user.email, 'owner@example.com');
+  assert.equal(response.body.user.role, 'super_admin');
+  assert.equal(response.body.user.isSuperAdmin, true);
 });

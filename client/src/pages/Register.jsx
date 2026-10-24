@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth.js';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
@@ -18,15 +18,22 @@ const Register = () => {
   const { register } = useAuth();
   const { t, language, changeLanguage } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    accountType: 'user',
+    accountType: searchParams.get('accountType') === 'institute' ? 'institute' : 'user',
     instituteName: '',
-    contactEmail: '',
   });
+  const accountTypeParam = searchParams.get('accountType');
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      accountType: accountTypeParam === 'institute' ? 'institute' : 'user',
+    }));
+  }, [accountTypeParam]);
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
@@ -62,14 +69,15 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
-      await register(formData.name, formData.email, formData.password, {
+      const user = await register(formData.name, formData.email, formData.password, {
         accountType: formData.accountType,
         ...(formData.accountType === 'institute' ? {
           instituteName: formData.instituteName,
-          contactEmail: formData.contactEmail,
         } : {}),
       });
-      navigate(formData.accountType === 'institute' ? '/institute' : '/dashboard');
+      navigate(user.role === 'super_admin' || user.role === 'admin'
+        ? '/admin'
+        : formData.accountType === 'institute' ? '/institute' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || t('auth.registrationFailed'));
     } finally {
@@ -123,21 +131,6 @@ const Register = () => {
                   onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your school or coaching institute"
-                />
-              </div>
-              <div>
-                <label htmlFor="contactEmail" className="mb-1 block text-sm font-medium text-gray-700">
-                  Institute contact email
-                </label>
-                <input
-                  id="contactEmail"
-                  name="contactEmail"
-                  type="email"
-                  required
-                  value={formData.contactEmail}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="contact@institute.com"
                 />
               </div>
               <p className="text-xs leading-5 text-slate-500">
@@ -268,6 +261,14 @@ const Register = () => {
             {t('auth.signIn')}
           </Link>
         </p>
+        {formData.accountType !== 'institute' && (
+          <p className="mt-3 text-center text-sm text-gray-600">
+            {t('auth.registeringInstitute')}{' '}
+            <Link to="/register?accountType=institute" className="font-medium text-blue-600 hover:underline">
+              {t('auth.createInstituteAccount')}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

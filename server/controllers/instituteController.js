@@ -10,12 +10,10 @@ const registerInstitute = async (req, res) => {
   try {
     const body = req.body || {};
     const name = typeof body.name === 'string' ? body.name.trim() : '';
-    const contactEmail = typeof body.contactEmail === 'string'
-      ? body.contactEmail.trim().toLowerCase()
-      : '';
+    const contactEmail = req.user.email.trim().toLowerCase();
 
-    if (!name || !contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
-      return res.status(400).json({ message: 'A valid institute name and contact email are required' });
+    if (!name) {
+      return res.status(400).json({ message: 'An institute name is required' });
     }
 
     const existing = await Institute.findOne({ ownerId: req.user._id });

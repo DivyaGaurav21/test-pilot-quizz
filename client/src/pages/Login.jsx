@@ -183,12 +183,21 @@ const Login = () => {
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          {t("auth.noAccount")}{" "}
+          {t("auth.newToTestPilot")}
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-600">
           <Link
             to="/register"
             className="font-medium text-blue-600 hover:underline"
           >
-            {t("auth.register")}
+            {t("auth.createStudentAccount")}
+          </Link>
+          {" "}{t("auth.or")}{" "}
+          <Link
+            to="/register?accountType=institute"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            {t("auth.registerInstitute")}
           </Link>
         </p>
       </div>

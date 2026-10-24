@@ -8,7 +8,6 @@ const InstituteDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [exams, setExams] = useState([]);
   const [results, setResults] = useState([]);
@@ -24,7 +23,6 @@ const InstituteDashboard = () => {
       const currentInstitute = await instituteService.getMyInstitute();
       setInstitute(currentInstitute);
       setName(currentInstitute?.name || "");
-      setContactEmail(currentInstitute?.contactEmail || "");
       if (currentInstitute?.status === "approved") {
         const [currentExams, currentResults, currentSubscription, currentFinance] = await Promise.all([
           instituteService.getExams(),
@@ -54,7 +52,7 @@ const InstituteDashboard = () => {
     try {
       setSaving(true);
       setError("");
-      const submitted = await instituteService.registerInstitute({ name, contactEmail });
+      const submitted = await instituteService.registerInstitute({ name });
       setInstitute(submitted);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to submit institute application.");
@@ -144,16 +142,6 @@ const InstituteDashboard = () => {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               />
             </label>
-            <label className="block text-sm font-medium text-slate-700">
-              Institute contact email
-              <input
-                required
-                type="email"
-                value={contactEmail}
-                onChange={(event) => setContactEmail(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-              />
-            </label>
             <button
               type="submit"
               disabled={saving}
@@ -179,10 +167,6 @@ const InstituteDashboard = () => {
                   <label className="block text-sm font-medium text-slate-700">
                     Institute name
                     <input required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
-                  </label>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Institute contact email
-                    <input required type="email" value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
                   </label>
                   <button type="submit" disabled={saving} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-60">
                     {saving ? "Submitting..." : "Resubmit application"}

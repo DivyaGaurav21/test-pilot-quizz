@@ -24,7 +24,7 @@ Create a Postman environment with:
 
 Protected requests use `Authorization: Bearer <JWT>`. Copy the `token` from a successful register/login response into the matching environment variable. IDs are MongoDB ObjectIds; copy real IDs from API responses rather than using the example labels literally.
 
-**Roles:** regular users can use learner endpoints; approved institute owners can use institute finance/content endpoints; `admin` can use admin dashboard endpoints; `super_admin` can review institutes and use finance administration. Public registration only creates `user` accounts. Admin roles must be provisioned by an operator. Google authentication is currently disabled.
+**Roles:** regular users can use learner endpoints; approved institute owners can use institute finance/content endpoints; `admin` can use admin dashboard endpoints; `super_admin` can review institutes and use finance administration. Public registration accepts `user` or `institute` account types; institute signups create pending applications. The configured `SUPER_ADMIN_EMAIL` receives the `super_admin` role when that email registers; other admin accounts remain operator-provisioned. Google authentication is currently disabled.
 
 Money values in request bodies are integer minor currency units (`pricePaise`, for example INR ₹20.00 = `2000`).
 
@@ -58,10 +58,10 @@ Register a learner:
 curl --location --request POST '{{baseUrl}}/api/auth/register' --header 'Content-Type: application/json' --data-raw '{"name":"Asha Learner","email":"asha.learner@example.com","password":"TestPass123!","accountType":"user"}'
 ```
 
-Register an institute account. This creates a regular user and a **pending** institute application; it does not auto-approve or create an admin account:
+Register an institute account. Use the same email for sign-in and institute contact; the application remains **pending** until a superadmin approves it. A new account whose email matches `SUPER_ADMIN_EMAIL` is assigned the superadmin role:
 
 ```bash
-curl --location --request POST '{{baseUrl}}/api/auth/register' --header 'Content-Type: application/json' --data-raw '{"name":"Ravi Sharma","email":"ravi.owner@example.com","password":"TestPass123!","accountType":"institute","instituteName":"Sample Learning Center","contactEmail":"contact@sample-learning.example"}'
+curl --location --request POST '{{baseUrl}}/api/auth/register' --header 'Content-Type: application/json' --data-raw '{"name":"Ravi Sharma","email":"ravi.owner@example.com","password":"TestPass123!","accountType":"institute","instituteName":"Sample Learning Center"}'
 ```
 
 Log in:
@@ -118,10 +118,10 @@ Get the signed-in user's institute application:
 curl --location '{{baseUrl}}/api/institutes/me' --header 'Authorization: Bearer {{userToken}}'
 ```
 
-Submit or re-submit an institute application for an already registered account:
+Submit or re-submit an institute application for an already registered account. The institute contact email is taken from the authenticated account:
 
 ```bash
-curl --location --request POST '{{baseUrl}}/api/institutes/register' --header 'Authorization: Bearer {{userToken}}' --header 'Content-Type: application/json' --data-raw '{"name":"Sample Learning Center","contactEmail":"contact@sample-learning.example"}'
+curl --location --request POST '{{baseUrl}}/api/institutes/register' --header 'Authorization: Bearer {{userToken}}' --header 'Content-Type: application/json' --data-raw '{"name":"Sample Learning Center"}'
 ```
 
 List the approved owner's exams:
