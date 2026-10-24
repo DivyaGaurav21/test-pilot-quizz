@@ -16,8 +16,7 @@ const useExam = () => {
       setExams(response);
       return response;
     } catch (err) {
-      const message =
-        err.response?.data?.message || "Unable to load exams.";
+      const message = err.response?.data?.message || "Unable to load exams.";
       setError(message);
       throw err;
     } finally {
@@ -34,9 +33,7 @@ const useExam = () => {
       setExam(response);
       return response;
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to load exam."
-      );
+      setError(err.response?.data?.message || "Unable to load exam.");
       throw err;
     } finally {
       setLoading(false);
@@ -49,9 +46,7 @@ const useExam = () => {
       setError("");
       return await examService.startExam(examId);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to start exam."
-      );
+      setError(err.response?.data?.message || "Unable to start exam.");
       throw err;
     } finally {
       setLoading(false);
@@ -64,9 +59,7 @@ const useExam = () => {
       setError("");
       return await examService.submitExam(examId, answers, timeTaken);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to submit exam."
-      );
+      setError(err.response?.data?.message || "Unable to submit exam.");
       throw err;
     } finally {
       setLoading(false);
@@ -74,20 +67,19 @@ const useExam = () => {
   }, []);
 
   const deleteExam = useCallback(async (examId) => {
-  try {
-    setLoading(true);
-    setError("");
-    const response = await examService.deleteExam(examId);
-    setExams((current) => current.filter((exam) => exam._id !== examId));
-    return response;
-  } catch (err) {
-    setError(err.response?.data?.message || "Unable to delete exam.");
-    throw err;
-  } finally {
-    setLoading(false);
-  }
-}, []);
-
+    try {
+      setLoading(true);
+      setError("");
+      const response = await examService.deleteExam(examId);
+      setExams((current) => current.filter((exam) => exam._id !== examId));
+      return response;
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to delete exam.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     exams,
@@ -98,7 +90,7 @@ const useExam = () => {
     fetchExam,
     startExam,
     submitExam,
-    deleteExam
+    deleteExam,
   };
 };
 

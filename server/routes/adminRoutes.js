@@ -20,6 +20,11 @@ router.post("/import-json", protect, adminAuth, importJson);
 router.get("/results", protect, adminAuth, getAllResults);
 router.delete("/exams/:id", protect, adminAuth, deleteExam);
 router.get("/institutes", protect, superAdminAuth, getInstituteApplications);
-router.patch("/institutes/:id", protect, superAdminAuth, reviewInstituteApplication);
+router.patch(
+  "/institutes/:id",
+  protect,
+  superAdminAuth,
+  reviewInstituteApplication,
+);
 
 module.exports = router;

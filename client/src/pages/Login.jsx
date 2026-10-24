@@ -26,7 +26,9 @@ const Login = () => {
 
     try {
       const user = await login(formData.email, formData.password);
-      navigate(["admin", "super_admin"].includes(user.role) ? "/admin" : "/dashboard");
+      navigate(
+        ["admin", "super_admin"].includes(user.role) ? "/admin" : "/dashboard",
+      );
     } catch (err) {
       setError(err.response?.data?.message || t("auth.loginFailed"));
     } finally {
@@ -191,8 +193,8 @@ const Login = () => {
             className="font-medium text-blue-600 hover:underline"
           >
             {t("auth.createStudentAccount")}
-          </Link>
-          {" "}{t("auth.or")}{" "}
+          </Link>{" "}
+          {t("auth.or")}{" "}
           <Link
             to="/register?accountType=institute"
             className="font-medium text-blue-600 hover:underline"

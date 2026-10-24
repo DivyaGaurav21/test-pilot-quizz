@@ -52,11 +52,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const formatRevenue = (amountPaise) => new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: overview?.currency || "INR",
-    maximumFractionDigits: 2,
-  }).format((amountPaise || 0) / 100);
+  const formatRevenue = (amountPaise) =>
+    new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: overview?.currency || "INR",
+      maximumFractionDigits: 2,
+    }).format((amountPaise || 0) / 100);
 
   useEffect(() => {
     loadResults();
@@ -242,9 +243,13 @@ const AdminDashboard = () => {
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                        <span className="text-lg font-bold" aria-hidden="true">₹</span>
+                        <span className="text-lg font-bold" aria-hidden="true">
+                          ₹
+                        </span>
                       </div>
-                      <p className="text-sm text-gray-500">Recorded platform revenue</p>
+                      <p className="text-sm text-gray-500">
+                        Recorded platform revenue
+                      </p>
                     </div>
                     <p className="mt-3 text-2xl font-bold text-gray-900">
                       {formatRevenue(overview?.platformRevenuePaise)}
@@ -255,20 +260,41 @@ const AdminDashboard = () => {
                 <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h2 className="font-semibold text-gray-900">Revenue details</h2>
-                      <p className="mt-1 text-xs text-gray-500">Totals are based on recorded finance ledger entries.</p>
+                      <h2 className="font-semibold text-gray-900">
+                        Revenue details
+                      </h2>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Totals are based on recorded finance ledger entries.
+                      </p>
                     </div>
-                    {isSuperAdmin && <Link to="/admin/finance" className="text-sm font-semibold text-indigo-700 hover:text-indigo-900">Open finance controls →</Link>}
+                    {isSuperAdmin && (
+                      <Link
+                        to="/admin/finance"
+                        className="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+                      >
+                        Open finance controls →
+                      </Link>
+                    )}
                   </div>
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
                     {[
                       ["Exam sales recorded", overview?.examSalesPaise],
-                      ["Subscription revenue", overview?.subscriptionRevenuePaise],
-                      ["Institute share accrued", overview?.instituteRevenuePaise],
+                      [
+                        "Subscription revenue",
+                        overview?.subscriptionRevenuePaise,
+                      ],
+                      [
+                        "Institute share accrued",
+                        overview?.instituteRevenuePaise,
+                      ],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-xl bg-slate-50 p-4">
-                        <p className="text-xs font-medium text-slate-500">{label}</p>
-                        <p className="mt-2 text-lg font-bold text-slate-900">{formatRevenue(value)}</p>
+                        <p className="text-xs font-medium text-slate-500">
+                          {label}
+                        </p>
+                        <p className="mt-2 text-lg font-bold text-slate-900">
+                          {formatRevenue(value)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -276,11 +302,17 @@ const AdminDashboard = () => {
 
                 <section className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                   <div className="border-b border-gray-200 px-5 py-4">
-                    <h2 className="font-semibold text-gray-900">Student details</h2>
-                    <p className="mt-1 text-xs text-gray-500">Most recently created student accounts, up to 100.</p>
+                    <h2 className="font-semibold text-gray-900">
+                      Student details
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Most recently created student accounts, up to 100.
+                    </p>
                   </div>
                   {students.length === 0 ? (
-                    <p className="px-5 py-8 text-sm text-gray-500">No student accounts to show yet.</p>
+                    <p className="px-5 py-8 text-sm text-gray-500">
+                      No student accounts to show yet.
+                    </p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-left text-sm">
@@ -294,9 +326,17 @@ const AdminDashboard = () => {
                         <tbody className="divide-y divide-gray-100">
                           {students.map((student) => (
                             <tr key={student._id}>
-                              <td className="px-5 py-3 font-medium text-gray-800">{student.name}</td>
-                              <td className="px-5 py-3 text-gray-600">{student.email}</td>
-                              <td className="px-5 py-3 text-gray-500">{new Date(student.createdAt).toLocaleDateString()}</td>
+                              <td className="px-5 py-3 font-medium text-gray-800">
+                                {student.name}
+                              </td>
+                              <td className="px-5 py-3 text-gray-600">
+                                {student.email}
+                              </td>
+                              <td className="px-5 py-3 text-gray-500">
+                                {new Date(
+                                  student.createdAt,
+                                ).toLocaleDateString()}
+                              </td>
                             </tr>
                           ))}
                         </tbody>

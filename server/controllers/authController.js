@@ -43,12 +43,10 @@ const register = async (req, res) => {
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
       password.length < 6
     ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Provide a valid email and a password with at least 6 characters",
-        });
+      return res.status(400).json({
+        message:
+          "Provide a valid email and a password with at least 6 characters",
+      });
     }
     if (!["user", "institute"].includes(accountType)) {
       return res
@@ -57,20 +55,16 @@ const register = async (req, res) => {
     }
     if (
       accountType === "institute" &&
-      (typeof instituteName !== "string" ||
-        !instituteName.trim())
+      (typeof instituteName !== "string" || !instituteName.trim())
     ) {
-      return res
-        .status(400)
-        .json({
-          message: "An institute name is required",
-        });
+      return res.status(400).json({
+        message: "An institute name is required",
+      });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const configuredSuperAdminEmail = process.env.SUPER_ADMIN_EMAIL
-      ?.trim()
-      .toLowerCase();
+    const configuredSuperAdminEmail =
+      process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
     const role =
       configuredSuperAdminEmail && normalizedEmail === configuredSuperAdminEmail
         ? "super_admin"

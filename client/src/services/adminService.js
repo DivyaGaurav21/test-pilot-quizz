@@ -26,7 +26,10 @@ const getInstituteApplications = async () => {
 };
 
 const reviewInstitute = async (instituteId, status, rejectionReason = "") => {
-  const response = await api.patch(`/admin/institutes/${instituteId}`, { status, rejectionReason });
+  const response = await api.patch(`/admin/institutes/${instituteId}`, {
+    status,
+    rejectionReason,
+  });
   return response.data;
 };
 

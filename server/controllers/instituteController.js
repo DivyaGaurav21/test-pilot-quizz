@@ -1,52 +1,68 @@
-const mongoose = require('mongoose');
-const { validateExamJson, importExam } = require('../services/examImportService');
-const Exam = require('../models/Exam');
-const Result = require('../models/Result');
-const Institute = require('../models/Institute');
+const mongoose = require("mongoose");
+const {
+  validateExamJson,
+  importExam,
+} = require("../services/examImportService");
+const Exam = require("../models/Exam");
+const Result = require("../models/Result");
+const Institute = require("../models/Institute");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const registerInstitute = async (req, res) => {
   try {
     const body = req.body || {};
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const name = typeof body.name === "string" ? body.name.trim() : "";
     const contactEmail = req.user.email.trim().toLowerCase();
 
     if (!name) {
-      return res.status(400).json({ message: 'An institute name is required' });
+      return res.status(400).json({ message: "An institute name is required" });
     }
 
     const existing = await Institute.findOne({ ownerId: req.user._id });
-    if (existing && existing.status !== 'rejected') {
-      return res.status(409).json({ message: 'An institute application already exists for this account' });
+    if (existing && existing.status !== "rejected") {
+      return res
+        .status(409)
+        .json({
+          message: "An institute application already exists for this account",
+        });
     }
 
     const institute = existing
       ? await Institute.findByIdAndUpdate(
-      existing._id,
-      {
-        $set: {
+          existing._id,
+          {
+            $set: {
+              name,
+              contactEmail,
+              status: "pending",
+              rejectionReason: "",
+            },
+            $unset: { reviewedBy: 1, reviewedAt: 1 },
+          },
+          { new: true, runValidators: true },
+        )
+      : await Institute.create({
           name,
           contactEmail,
-          status: 'pending',
-          rejectionReason: '',
-        },
-        $unset: { reviewedBy: 1, reviewedAt: 1 },
-      },
-      { new: true, runValidators: true },
-      )
-      : await Institute.create({
-        name,
-        contactEmail,
-        ownerId: req.user._id,
-      });
+          ownerId: req.user._id,
+        });
 
     return res.status(existing ? 200 : 201).json(institute);
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ message: 'An institute application already exists for this account' });
+      return res
+        .status(409)
+        .json({
+          message: "An institute application already exists for this account",
+        });
     }
-    return res.status(500).json({ message: 'Failed to submit institute application', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to submit institute application",
+        error: error.message,
+      });
   }
 };
 
@@ -55,51 +71,60 @@ const getMyInstitute = async (req, res) => {
     const institute = await Institute.findOne({ ownerId: req.user._id });
     return res.status(200).json({ institute });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch institute application', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to fetch institute application",
+        error: error.message,
+      });
   }
 };
 
 const getPopularInstitutes = async (req, res) => {
   try {
     const institutes = await Institute.aggregate([
-      { $match: { status: 'approved' } },
+      { $match: { status: "approved" } },
       {
         $lookup: {
           from: Exam.collection.name,
-          let: { instituteId: '$_id' },
+          let: { instituteId: "$_id" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ['$instituteId', '$$instituteId'] },
-                    { $eq: ['$isPublished', true] },
+                    { $eq: ["$instituteId", "$$instituteId"] },
+                    { $eq: ["$isPublished", true] },
                   ],
                 },
               },
             },
-            { $count: 'count' },
+            { $count: "count" },
           ],
-          as: 'examStats',
+          as: "examStats",
         },
       },
       {
         $lookup: {
           from: Result.collection.name,
-          let: { instituteId: '$_id' },
+          let: { instituteId: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ['$instituteId', '$$instituteId'] } } },
-            { $count: 'count' },
+            { $match: { $expr: { $eq: ["$instituteId", "$$instituteId"] } } },
+            { $count: "count" },
           ],
-          as: 'resultStats',
+          as: "resultStats",
         },
       },
       {
         $project: {
           name: 1,
           createdAt: 1,
-          publishedExamCount: { $ifNull: [{ $arrayElemAt: ['$examStats.count', 0] }, 0] },
-          resultCount: { $ifNull: [{ $arrayElemAt: ['$resultStats.count', 0] }, 0] },
+          publishedExamCount: {
+            $ifNull: [{ $arrayElemAt: ["$examStats.count", 0] }, 0],
+          },
+          resultCount: {
+            $ifNull: [{ $arrayElemAt: ["$resultStats.count", 0] }, 0],
+          },
         },
       },
       { $match: { publishedExamCount: { $gt: 0 } } },
@@ -108,7 +133,12 @@ const getPopularInstitutes = async (req, res) => {
     ]);
     return res.status(200).json(institutes);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch popular institutes', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to fetch popular institutes",
+        error: error.message,
+      });
   }
 };
 
@@ -116,12 +146,15 @@ const importInstituteExam = async (req, res) => {
   try {
     const errors = validateExamJson(req.body);
     if (errors.length > 0) {
-      return res.status(400).json({ message: 'Invalid exam JSON', errors });
+      return res.status(400).json({ message: "Invalid exam JSON", errors });
     }
 
-    const exam = await importExam(req.body, { instituteId: req.institute._id, createdBy: req.user._id });
+    const exam = await importExam(req.body, {
+      instituteId: req.institute._id,
+      createdBy: req.user._id,
+    });
     return res.status(201).json({
-      message: 'Exam imported successfully',
+      message: "Exam imported successfully",
       exam: {
         id: exam._id,
         title: exam.title,
@@ -131,16 +164,25 @@ const importInstituteExam = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to import exam', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to import exam", error: error.message });
   }
 };
 
 const getInstituteExams = async (req, res) => {
   try {
-    const exams = await Exam.find({ instituteId: req.institute._id }).sort({ createdAt: -1 });
+    const exams = await Exam.find({ instituteId: req.institute._id }).sort({
+      createdAt: -1,
+    });
     return res.status(200).json(exams);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch institute exams', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to fetch institute exams",
+        error: error.message,
+      });
   }
 };
 
@@ -150,31 +192,43 @@ const updateInstituteExam = async (req, res) => {
     const { isPublished, pricePaise } = req.body || {};
 
     if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: 'Invalid exam id' });
+      return res.status(400).json({ message: "Invalid exam id" });
     }
 
-    if (typeof isPublished !== 'boolean' && pricePaise === undefined) {
-      return res.status(400).json({ message: 'isPublished or pricePaise is required' });
+    if (typeof isPublished !== "boolean" && pricePaise === undefined) {
+      return res
+        .status(400)
+        .json({ message: "isPublished or pricePaise is required" });
     }
 
-    if (pricePaise !== undefined && (!Number.isSafeInteger(pricePaise) || pricePaise < 0)) {
-      return res.status(400).json({ message: 'pricePaise must be a non-negative integer' });
+    if (
+      pricePaise !== undefined &&
+      (!Number.isSafeInteger(pricePaise) || pricePaise < 0)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "pricePaise must be a non-negative integer" });
     }
 
     const session = await mongoose.startSession();
     let exam;
     try {
       await session.withTransaction(async () => {
-        exam = await Exam.findOne({ _id: id, instituteId: req.institute._id }).session(session);
+        exam = await Exam.findOne({
+          _id: id,
+          instituteId: req.institute._id,
+        }).session(session);
         if (!exam) {
-          const err = new Error('Exam not found');
+          const err = new Error("Exam not found");
           err.statusCode = 404;
           throw err;
         }
 
         if (pricePaise !== undefined) exam.pricePaise = pricePaise;
         if (isPublished === true && !exam.isPublished) {
-          const { recordPublication } = require('../services/monetizationService');
+          const {
+            recordPublication,
+          } = require("../services/monetizationService");
           await recordPublication({
             instituteId: req.institute._id,
             examId: exam._id,
@@ -198,20 +252,30 @@ const updateInstituteExam = async (req, res) => {
 
     return res.status(200).json(exam);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to update institute exam', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to update institute exam",
+        error: error.message,
+      });
   }
 };
 
 const getInstituteResults = async (req, res) => {
   try {
     const results = await Result.find({ instituteId: req.institute._id })
-      .populate('userId', 'name email')
-      .populate('examId', 'title subject')
+      .populate("userId", "name email")
+      .populate("examId", "title subject")
       .sort({ submittedAt: -1 });
 
     return res.status(200).json(results);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to fetch institute results', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to fetch institute results",
+        error: error.message,
+      });
   }
 };
 

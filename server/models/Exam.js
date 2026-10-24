@@ -1,21 +1,3 @@
-// import mongoose from 'mongoose';
-
-// const examSchema = new mongoose.Schema(
-//   {
-//     name: { type: String, required: true, trim: true },
-//     description: { type: String, default: '' },
-//     subject: String,
-//     topic: String,
-//     difficulty: String,
-//     durationMinutes: { type: Number, required: true, default: 30 },
-//     totalQuestions: { type: Number, default: 0 },
-//     isPublished: { type: Boolean, default: true },
-//   },
-//   { timestamps: true }
-// );
-
-// export default mongoose.model('Exam', examSchema);
-
 const mongoose = require('mongoose');
 
 const examSchema = new mongoose.Schema({

@@ -39,7 +39,7 @@ const examService = {
   startExam,
   purchaseExam,
   submitExam,
-  deleteExam
+  deleteExam,
 };
 
 export default examService;

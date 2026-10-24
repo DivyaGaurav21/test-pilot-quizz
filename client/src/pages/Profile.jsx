@@ -31,8 +31,6 @@ const Profile = () => {
           <div className="px-6 pb-8 sm:px-8">
             {/* Avatar */}
             <div className="-mt-12 flex items-end justify-between">
-
-
               {isAdmin && (
                 <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
                   <svg

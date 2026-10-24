@@ -1,40 +1,46 @@
-const mongoose = require('mongoose');
-const Exam = require('../models/Exam');
-const Question = require('../models/Question');
+const mongoose = require("mongoose");
+const Exam = require("../models/Exam");
+const Question = require("../models/Question");
 
 // Validates the raw imported JSON structure and content.
 // Returns an array of error messages (empty array = valid).
 const validateExamJson = (data) => {
   const errors = [];
 
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    errors.push('Invalid JSON payload');
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    errors.push("Invalid JSON payload");
     return errors;
   }
 
-  if (!data.exam || typeof data.exam !== 'string' || !data.exam.trim()) {
+  if (!data.exam || typeof data.exam !== "string" || !data.exam.trim()) {
     errors.push('"exam" is required and must be a non-empty string');
   }
 
-  if (!data.subject || typeof data.subject !== 'string' || !data.subject.trim()) {
+  if (
+    !data.subject ||
+    typeof data.subject !== "string" ||
+    !data.subject.trim()
+  ) {
     errors.push('"subject" is required and must be a non-empty string');
   }
 
   if (
     data.duration === undefined ||
     data.duration === null ||
-    typeof data.duration !== 'number' ||
+    typeof data.duration !== "number" ||
     data.duration <= 0
   ) {
     errors.push('"duration" is required and must be a positive number');
   }
 
-  if (data.isPublished !== undefined && typeof data.isPublished !== 'boolean') {
+  if (data.isPublished !== undefined && typeof data.isPublished !== "boolean") {
     errors.push('"isPublished" must be a boolean when provided');
   }
 
-  if (data.pricePaise !== undefined
-    && (!Number.isSafeInteger(data.pricePaise) || data.pricePaise < 0)) {
+  if (
+    data.pricePaise !== undefined &&
+    (!Number.isSafeInteger(data.pricePaise) || data.pricePaise < 0)
+  ) {
     errors.push('"pricePaise" must be a non-negative integer');
   }
 
@@ -46,12 +52,12 @@ const validateExamJson = (data) => {
   data.questions.forEach((q, index) => {
     const label = `Question ${index + 1}`;
 
-    if (!q || typeof q !== 'object' || Array.isArray(q)) {
+    if (!q || typeof q !== "object" || Array.isArray(q)) {
       errors.push(`${label}: must be an object`);
       return;
     }
 
-    if (!q.question || typeof q.question !== 'string' || !q.question.trim()) {
+    if (!q.question || typeof q.question !== "string" || !q.question.trim()) {
       errors.push(`${label}: question text is required`);
     }
 
@@ -62,15 +68,22 @@ const validateExamJson = (data) => {
     if (
       q.correctAnswer === undefined ||
       q.correctAnswer === null ||
-      typeof q.correctAnswer !== 'string' ||
+      typeof q.correctAnswer !== "string" ||
       !q.correctAnswer.trim()
     ) {
       errors.push(`${label}: correctAnswer is required`);
-    } else if (Array.isArray(q.options) && !q.options.includes(q.correctAnswer)) {
+    } else if (
+      Array.isArray(q.options) &&
+      !q.options.includes(q.correctAnswer)
+    ) {
       errors.push(`${label}: correctAnswer must match one of the options`);
     }
 
-    if (!q.explanation || typeof q.explanation !== 'string' || !q.explanation.trim()) {
+    if (
+      !q.explanation ||
+      typeof q.explanation !== "string" ||
+      !q.explanation.trim()
+    ) {
       errors.push(`${label}: explanation is required`);
     }
   });
@@ -80,7 +93,10 @@ const validateExamJson = (data) => {
 
 // Creates the Exam and its Questions in the database.
 // Assumes data has already passed validateExamJson.
-const importExam = async (data, { instituteId = null, createdBy = null } = {}) => {
+const importExam = async (
+  data,
+  { instituteId = null, createdBy = null } = {},
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -90,8 +106,8 @@ const importExam = async (data, { instituteId = null, createdBy = null } = {}) =
         {
           title: data.exam,
           subject: data.subject,
-          topic: data.topic || '',
-          difficulty: data.difficulty || '',
+          topic: data.topic || "",
+          difficulty: data.difficulty || "",
           duration: data.duration,
           totalQuestions: data.questions.length,
           isPublished: instituteId ? false : (data.isPublished ?? true),
@@ -99,13 +115,13 @@ const importExam = async (data, { instituteId = null, createdBy = null } = {}) =
           pricePaise: data.pricePaise ?? 0,
         },
       ],
-      { session }
+      { session },
     );
 
     const createdExam = exam[0];
 
     if (instituteId && data.isPublished === true) {
-      const { recordPublication } = require('./monetizationService');
+      const { recordPublication } = require("./monetizationService");
       await recordPublication({
         instituteId,
         examId: createdExam._id,
